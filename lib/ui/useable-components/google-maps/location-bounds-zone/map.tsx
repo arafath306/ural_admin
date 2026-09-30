@@ -12,7 +12,7 @@ import {
   pointsToGeoJSON,
   calculateCenterPoints,
 } from '@/lib/utils/methods';
-import { DEFAULT_CENTER, DEFAULT_POLYGON } from '@/lib/utils/constants';
+import { DEFAULT_CENTER } from '@/lib/utils/constants';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapMarker } from '@fortawesome/free-solid-svg-icons';
@@ -39,7 +39,7 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
 
   const [deliveryZoneType, setDeliveryZoneType] = useState('polygon');
   const [center, setCenter] = useState(DEFAULT_CENTER);
-  const [path, setPath] = useState<ILocationPoint[]>(DEFAULT_POLYGON);
+  const [path, setPath] = useState<ILocationPoint[]>([]);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const [options, setOptions] = useState<any[]>([]);
@@ -48,7 +48,7 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
   // Handle Nominatim search
   const onSearch = async (event: any) => {
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(event.query + ' Bangladesh')}`);
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(event.query + ' Rajshahi Bangladesh')}`);
       const data = await res.json();
       const results = data.map((item: any) => ({
         description: item.display_name,
@@ -59,17 +59,6 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
     } catch (err) {
       console.error(err);
     }
-  };
-
-  const createPolygonAroundPoint = (c: { lat: number; lng: number }, sizeMeters = 500): ILocationPoint[] => {
-    const latOffset = sizeMeters * 0.0000089;
-    const lngOffset = (sizeMeters * 0.0000089) / Math.cos((c.lat * Math.PI) / 180);
-    return [
-      { lat: c.lat + latOffset, lng: c.lng - lngOffset },
-      { lat: c.lat + latOffset, lng: c.lng + lngOffset },
-      { lat: c.lat - latOffset, lng: c.lng + lngOffset },
-      { lat: c.lat - latOffset, lng: c.lng - lngOffset },
-    ];
   };
 
   const bindPolygonEvents = (layer: L.Polygon) => {
@@ -93,28 +82,7 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
       const centerPoint = { lat: selected.lat, lng: selected.lng };
       setCenter(centerPoint);
       setInputValue(selected.description);
-
-      const newPath = createPolygonAroundPoint(centerPoint, 500);
-      setPath(newPath);
-
-      if (polygonRef.current) {
-        mapRef.current.removeLayer(polygonRef.current);
-      }
-
-      const newPoly = L.polygon(newPath.map((p) => [p.lat, p.lng] as L.LatLngTuple), {
-        color: '#1d4ed8',
-        fillColor: '#3b82f6',
-        fillOpacity: 0.3,
-        weight: 2,
-      }).addTo(mapRef.current);
-
-      polygonRef.current = newPoly;
-      bindPolygonEvents(newPoly);
-
-      mapRef.current.setView([centerPoint.lat, centerPoint.lng], 14);
-      mapRef.current.fitBounds(newPoly.getBounds(), { padding: [30, 30] });
-
-      onSetZoneCoordinates(pointsToGeoJSON(newPath));
+      mapRef.current.setView([centerPoint.lat, centerPoint.lng], 15);
     }
   };
 
@@ -122,22 +90,15 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Determine initial points
+    // Check if editing an existing zone with real points
     const extracted = extractLatLngPoints(_path);
-    let initialPath = DEFAULT_POLYGON;
-    let initialCenter = DEFAULT_CENTER;
 
+    let initialCenter = DEFAULT_CENTER;
     if (extracted.length >= 3) {
-      initialPath = extracted;
       initialCenter = calculateCenterPoints(extracted);
     }
 
-    setPath(initialPath);
-    setCenter(initialCenter);
-    // Auto-sync initial points immediately
-    onSetZoneCoordinates(pointsToGeoJSON(initialPath));
-
-    const map = L.map(mapContainerRef.current).setView([initialCenter.lat, initialCenter.lng], 13);
+    const map = L.map(mapContainerRef.current).setView([initialCenter.lat, initialCenter.lng], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors',
     }).addTo(map);
@@ -156,21 +117,32 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
       removalMode: true,
     });
 
-    // Draw initial polygon
-    const initialPoly = L.polygon(initialPath.map((p) => [p.lat, p.lng] as L.LatLngTuple), {
-      color: '#1d4ed8',
-      fillColor: '#3b82f6',
-      fillOpacity: 0.3,
-      weight: 2,
-    }).addTo(map);
+    if (extracted.length >= 3) {
+      // Existing zone being edited: draw its polygon
+      setPath(extracted);
+      setCenter(initialCenter);
+      onSetZoneCoordinates(pointsToGeoJSON(extracted));
 
-    polygonRef.current = initialPoly;
-    bindPolygonEvents(initialPoly);
+      const poly = L.polygon(extracted.map((p) => [p.lat, p.lng] as L.LatLngTuple), {
+        color: '#1d4ed8',
+        fillColor: '#3b82f6',
+        fillOpacity: 0.3,
+        weight: 2,
+      }).addTo(map);
 
-    try {
-      map.fitBounds(initialPoly.getBounds(), { padding: [30, 30] });
-    } catch (e) {
-      console.warn('fitBounds error:', e);
+      polygonRef.current = poly;
+      bindPolygonEvents(poly);
+
+      try {
+        map.fitBounds(poly.getBounds(), { padding: [30, 30] });
+      } catch (e) {
+        console.warn('fitBounds error:', e);
+      }
+    } else {
+      // New zone: NO default box! Start with a clean map of Rajshahi
+      setPath([]);
+      setCenter(DEFAULT_CENTER);
+      onSetZoneCoordinates([]);
     }
 
     // Geoman event: when user finishes drawing a polygon
@@ -228,7 +200,7 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
             field="description"
             onChange={(e) => setInputValue(e.value?.description || e.value)}
             onSelect={onSelect}
-            placeholder="Search Rajshahi location (e.g. Bornali, Fire Service, Hatem Khan)..."
+            placeholder="Search Rajshahi area (e.g. Talaimari, Bornali, Kazla, Shaheb Bazar)..."
             className="w-full"
             inputClassName="w-full px-2 py-3 rounded-lg border-none focus:outline-none text-sm"
             pt={{
@@ -244,36 +216,19 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
 
       {/* Footer */}
       <div className="flex items-center justify-between p-3 bg-gray-50 border-t border-gray-200 rounded-b z-10">
-        <CustomShape
-          onSetPath={(newPath) => {
-            setDeliveryZoneType('polygon');
-            setPath(newPath);
-            if (mapRef.current) {
-              if (polygonRef.current) {
-                mapRef.current.removeLayer(polygonRef.current);
-              }
-              const poly = L.polygon(newPath.map((p) => [p.lat, p.lng] as L.LatLngTuple), {
-                color: '#1d4ed8',
-                fillColor: '#3b82f6',
-                fillOpacity: 0.3,
-                weight: 2,
-              }).addTo(mapRef.current);
-              polygonRef.current = poly;
-              bindPolygonEvents(poly);
-              mapRef.current.fitBounds(poly.getBounds(), { padding: [30, 30] });
-            }
-            onSetZoneCoordinates(pointsToGeoJSON(newPath));
-          }}
-          type={deliveryZoneType}
-          center={center}
-          path={path}
-        />
-        <div className="flex items-center gap-3">
-          {path.length > 2 && (
-            <span className="text-xs text-green-700 font-semibold bg-green-100 px-2 py-1 rounded">
+        <div className="flex items-center gap-2">
+          {path.length === 0 ? (
+            <span className="text-xs text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 font-medium flex items-center gap-1.5">
+              <span>📍</span> ম্যাপের বাম টুলবার থেকে পলিগন (⬡) সিলেক্ট করে আপনার জোনের সীমানা ড্র করুন
+            </span>
+          ) : (
+            <span className="text-xs text-green-700 font-semibold bg-green-100 px-2.5 py-1 rounded-lg">
               ✅ {path.length} points active
             </span>
           )}
+        </div>
+
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={handleSave}

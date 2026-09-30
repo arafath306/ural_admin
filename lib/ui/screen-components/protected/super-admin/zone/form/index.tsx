@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import { IZoneAddFormComponentProps } from '@/lib/utils/interfaces';
 import CustomButton from '@/lib/ui/useable-components/button';
 import CustomTextField from '@/lib/ui/useable-components/input-field';
-import { ZoneErrors, DEFAULT_POLYGON } from '@/lib/utils/constants';
+import { ZoneErrors } from '@/lib/utils/constants';
 import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
 import { extractLatLngPoints, pointsToGeoJSON } from '@/lib/utils/methods';
 import { ZoneSchema } from '@/lib/utils/schema';
@@ -31,12 +31,11 @@ interface IZoneAddFormFullProps {
 }
 
 export default function ZoneAddForm({ onHide, zone }: IZoneAddFormFullProps) {
-  const defaultGeoJSON = pointsToGeoJSON(DEFAULT_POLYGON);
   const initialValues: IZoneForm = {
     _id: zone?._id ?? '',
     title: zone?.title || '',
     description: zone?.description || '',
-    coordinates: zone?.location?.coordinates || defaultGeoJSON,
+    coordinates: zone?.location?.coordinates ?? [],
   };
 
   const t = useTranslations();
@@ -53,8 +52,8 @@ export default function ZoneAddForm({ onHide, zone }: IZoneAddFormFullProps) {
       if (points.length < 3) {
         showToast({
           type: 'error',
-          title: 'Zone Boundary Missing',
-          message: 'Please draw a zone boundary with at least 3 points on the map.',
+          title: 'সীমানা প্রয়োজন',
+          message: 'অনুগ্রহ করে ম্যাপের পলিগন টুল (⬡) ব্যবহার করে আপনার জোনের সীমানা ড্র করুন।',
         });
         setMutationLoading(false);
         return;
@@ -154,23 +153,25 @@ export default function ZoneAddForm({ onHide, zone }: IZoneAddFormFullProps) {
                   />
                 </div>
 
-                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm text-blue-700 dark:text-blue-300">
-                  <p className="font-medium mb-1">🗺️ Map Instructions:</p>
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm text-blue-800 dark:text-blue-300">
+                  <p className="font-semibold mb-1.5 flex items-center gap-1.5">
+                    <span>🗺️</span> জোন সীমানা ড্র করার নিয়ম:
+                  </p>
                   <ol className="list-decimal list-inside space-y-1 text-xs">
-                    <li>Search your area in Rajshahi or drag the map</li>
-                    <li>Use the polygon tool on the map to draw or adjust points</li>
-                    <li>Points automatically synchronize with the form</li>
-                    <li>Click <strong>{zone ? 'Update' : 'Add'}</strong> below to save</li>
+                    <li>ম্যাপের বাম টুলবার থেকে <strong>পলিগন (⬡)</strong> টুলে ক্লিক করুন</li>
+                    <li>ম্যাপের যে এলাকাটি অন্তর্ভুক্ত করতে চান সেখানে পয়েন্টে পয়েন্টে ক্লিক করুন</li>
+                    <li>ড্র শেষ হলে প্রথম পয়েন্টের উপর ক্লিক করুন</li>
+                    <li>পয়েন্টগুলো স্বয়ংক্রিয়ভাবে সেভ হবে, এরপর <strong>{zone ? 'Update' : 'Add'}</strong> বাটনে ক্লিক করুন</li>
                   </ol>
                 </div>
 
                 {activePoints.length >= 3 ? (
                   <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-sm text-green-700 dark:text-green-300 font-medium">
-                    ✅ Zone boundary active ({activePoints.length} points)
+                    ✅ সীমানা সক্রিয় ({activePoints.length} points selected)
                   </div>
                 ) : (
-                  <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-sm text-amber-700 dark:text-amber-300">
-                    ⚠️ Please define at least 3 points on the map
+                  <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-xs text-amber-800 dark:text-amber-300">
+                    ⚠️ এখনও কোনো সীমানা ড্র করা হয়নি। ম্যাপে আপনার কাঙ্ক্ষিত এলাকা ড্র করুন।
                   </div>
                 )}
 

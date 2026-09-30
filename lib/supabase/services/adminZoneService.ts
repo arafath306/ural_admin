@@ -1,6 +1,5 @@
 import { supabase } from '../client';
 import { extractLatLngPoints, pointsToGeoJSON } from '@/lib/utils/methods';
-import { DEFAULT_POLYGON } from '@/lib/utils/constants';
 
 function mapRow(r: any) {
   return {
@@ -23,10 +22,7 @@ export function buildGeoJSON(coordinates?: any) {
       coordinates: pointsToGeoJSON(points),
     };
   }
-  return {
-    type: 'Polygon',
-    coordinates: pointsToGeoJSON(DEFAULT_POLYGON),
-  };
+  return null;
 }
 
 export const adminZoneService = {
@@ -53,6 +49,7 @@ export const adminZoneService = {
 
   async createZone(input: { title: string; description: string; coordinates?: any }) {
     const location = buildGeoJSON(input.coordinates);
+    if (!location) throw new Error('Zone boundary coordinates are required. Please draw a polygon on the map.');
     const { data, error } = await supabase.from('zones').insert({ title: input.title, description: input.description, location, is_active: true }).select().single();
     if (error) throw new Error(error.message || 'Failed to create zone');
     return mapRow(data);
@@ -61,9 +58,9 @@ export const adminZoneService = {
   async updateZone(id: string, input: { title: string; description: string; coordinates?: any }) {
     const updates: any = { title: input.title, description: input.description, updated_at: new Date().toISOString() };
     if (input.coordinates) {
-      const points = extractLatLngPoints(input.coordinates);
-      if (points.length >= 3) {
-        updates.location = buildGeoJSON(points);
+      const location = buildGeoJSON(input.coordinates);
+      if (location) {
+        updates.location = location;
       }
     }
     const { data, error } = await supabase.from('zones').update(updates).eq('id', id).select().single();
