@@ -2,7 +2,9 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin();
 /** @type {import('next').NextConfig} */
-const nextConfig = {\n  eslint: { ignoreDuringBuilds: true },\n  typescript: { ignoreBuildErrors: true },
+const nextConfig = {
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
   images: {
     dangerouslyAllowSVG: false,
     remotePatterns: [
@@ -58,7 +60,7 @@ const nextConfig = {\n  eslint: { ignoreDuringBuilds: true },\n  typescript: { i
         protocol: 'https',
         hostname: 'assets.enatega.com',
       }
-    ], // Add placehold.co as an allowed domain
+    ],
   },
 };
 
