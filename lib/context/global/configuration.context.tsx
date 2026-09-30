@@ -92,9 +92,7 @@ export const ConfigurationContext = React.createContext<
 export const ConfigurationProvider: React.FC<IConfigurationProviderProps> = ({
   children,
 }) => {
-  const [configuration, setConfiguration] = useState<
-    IConfiguration | undefined
-  >();
+  const [configuration, setConfiguration] = useState<IConfiguration | undefined>(DEFAULT_CONFIG as any);
 
 
 

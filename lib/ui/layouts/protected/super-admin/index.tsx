@@ -78,12 +78,7 @@ const Layout = ({ children }: IProvider) => {
 
             localStorage.setItem('messaging-token', token);
 
-            client
-              .mutate({
-                mutation: UPLOAD_TOKEN,
-                variables: { id: user?.userId, pushToken: token },
-              })
-              .catch((error) => console.error('🔥 Upload token error:', error));
+            /* Token stored in localStorage */
           })
           .catch((err) => console.error('❌ getToken error:', err));
 

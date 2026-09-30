@@ -7,10 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Chart } from 'primereact/chart';
 
 
-import {
-  IDashboardUsersByYearResponseGraphQL,
-  IQueryResult,
-} from '@/lib/utils/interfaces';
+// GraphQL interfaces removed
 import DashboardUsersByYearStatsSkeleton from '@/lib/ui/useable-components/custom-skeletons/dasboard.user.year.stats.skeleton';
 import { useTranslations } from 'next-intl';
 import { adminStatsService } from '@/lib/supabase/services/adminStatsService';
@@ -27,20 +24,7 @@ export default function GrowthOverView() {
     users: number[];
   } | null>(null);
 
-  // Optional GraphQL query
-  const { data, loading: gqlLoading } = useQueryGQL(
-    GET_DASHBOARD_USERS_BY_YEAR,
-    {
-      year: new Date().getFullYear(),
-    },
-    {
-      fetchPolicy: 'cache-and-network',
-      debounceMs: 300,
-    }
-  ) as IQueryResult<
-    IDashboardUsersByYearResponseGraphQL | undefined,
-    undefined
-  >;
+
 
   // Fallback to Supabase live metrics
   useEffect(() => {
@@ -69,16 +53,6 @@ export default function GrowthOverView() {
   }, []);
 
   const dashboardUsersByYear = useMemo(() => {
-    if (data?.getDashboardUsersByYear) {
-      return {
-        usersCount: data.getDashboardUsersByYear.usersCount ?? [],
-        vendorsCount: data.getDashboardUsersByYear.vendorsCount ?? [],
-        restaurantsCount: data.getDashboardUsersByYear.restaurantsCount ?? [],
-        ridersCount: Array.isArray(data.getDashboardUsersByYear.ridersCount)
-          ? data.getDashboardUsersByYear.ridersCount
-          : [],
-      };
-    }
     if (supabaseStats) {
       return {
         usersCount: supabaseStats.users,
@@ -88,7 +62,7 @@ export default function GrowthOverView() {
       };
     }
     return null;
-  }, [data, supabaseStats]);
+  }, [supabaseStats]);
 
   const onChartDataChange = () => {
     if (typeof window === 'undefined') return;
@@ -182,7 +156,7 @@ export default function GrowthOverView() {
     onChartDataChange();
   }, [dashboardUsersByYear]);
 
-  const isLoading = gqlLoading && !supabaseStats;
+  const isLoading = !supabaseStats;
 
   return (
     <div className="w-full p-3">

@@ -93,15 +93,8 @@ const VendorAppTopbar = () => {
   const router = useRouter();
   const [, startTransition] = useTransition();
 
-  // Queries
-  const { data: vendorData } = useQuery<
-    ISingleVendorResponseGraphQL | undefined,
-    { id: string }
-  >(GET_VENDOR_BY_ID, {
-    variables: {
-      id: vendorId ?? '',
-    },
-  });
+    // Queries (Mocked for Supabase)
+  const vendorData: any = undefined;
 
   // Handlers
   const onDevicePixelRatioChange = useCallback(() => {

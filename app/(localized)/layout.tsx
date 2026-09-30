@@ -24,10 +24,17 @@ import 'primereact/resources/themes/lara-light-cyan/theme.css';
 import 'primeicons/primeicons.css';
 import './global.css';
 
-import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
+import { ApolloClient, InMemoryCache, ApolloProvider, ApolloLink, Observable } from '@apollo/client';
+
+const mockLink = new ApolloLink(() => {
+  return new Observable((observer) => {
+    observer.next({ data: {} });
+    observer.complete();
+  });
+});
 
 const mockClient = new ApolloClient({
-  uri: '/api/graphql',
+  link: mockLink,
   cache: new InMemoryCache(),
 });
 

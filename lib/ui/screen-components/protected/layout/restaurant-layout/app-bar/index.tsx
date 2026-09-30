@@ -86,15 +86,8 @@ const AppTopbar = () => {
   const [isLogoutModalVisible, setLogoutModalVisible] = useState(false); // New state for the modal
   const [restaurantName, setRestaurantName] = useState('');
 
-  // Queries
-  const { data: restaurantData } = useQuery<
-    IRestaurantByIdResponse | undefined,
-    { id: string }
-  >(GET_RESTAURANT_PROFILE, {
-    variables: {
-      id: restaurantId ?? '',
-    },
-  });
+    // Queries (Mocked for Supabase)
+  const restaurantData: any = undefined;
 
   // Ref
   const containerRef = useRef<HTMLDivElement>(null);

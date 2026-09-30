@@ -106,34 +106,12 @@ const AppTopbar = () => {
     useContext<LayoutContextProps>(LayoutContext);
   const { user, setUser } = useUserContext();
 
-  // Query
-  const { loading, refetch } = useQuery(GET_WEB_NOTIFICATIONS, {
-    fetchPolicy: 'network-only',
-    onCompleted: (data) => {
-      setNotifications(data?.webNotifications);
-    },
-  });
-
-  // Subscriptions
-  useSubscription(RIDER_UPDATED_SUBSCRIPTION, {
-    fetchPolicy: 'network-only',
-    onData: async () => {
-      const result = await refetch();
-      setNotifications(result?.data?.webNotifications);
-    },
-  });
-
-  // Mutation
-  const [markAllAsRead] = useMutation(MARK_WEB_NOTIFICATIONS_AS_READ, {
-    refetchQueries: [{ query: GET_WEB_NOTIFICATIONS }],
-    onCompleted: (data) => {
-      setNotifications(data?.markWebNotificationsAsRead);
-    },
-  });
+    const loading = false;
+  const refetch = async () => ({ data: { webNotifications: [] } });
+  const markAllAsRead = () => {};
 
   // Handlers
   const toggleDropdown = () => {
-    markAllAsRead();
     setIsNtfnOpen((prevState) => !prevState);
   };
 
