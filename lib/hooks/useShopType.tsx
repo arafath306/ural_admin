@@ -1,9 +1,6 @@
-import { useEffect, useMemo } from 'react';
-import { useLazyQueryQL } from './useLazyQueryQL';
-import { GET_SHOP_TYPES } from '../api/graphql';
+import { useEffect, useState } from 'react';
+import { adminShopTypeService } from '@/lib/supabase/services/adminShopTypeService';
 import {
-  IGetShopTypesData,
-  ILazyQueryResult,
   IUserShopTypeHookProps,
   IUseShopTypesHookResponse,
 } from '../utils/interfaces';
@@ -14,34 +11,30 @@ export const useShopTypes = (
     transform_to_dropdown_list: false,
   }
 ): IUseShopTypesHookResponse => {
-  // Props
   const { invoke_now, transform_to_dropdown_list } = props;
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [dropdownList, setDropdownList] = useState<any[]>([]);
 
-  const { data, loading, fetch } = useLazyQueryQL(GET_SHOP_TYPES, {
-    fetchPolicy: 'cache-and-network',
-    debounceMs: 5000,
-  }) as ILazyQueryResult<IGetShopTypesData | undefined, undefined>;
-
-  // Handler
-  const fetchShopTypes = () => {
-    fetch();
+  const fetchShopTypes = async () => {
+    setLoading(true);
+    try {
+      const result = await adminShopTypeService.fetchShopTypes();
+      setData({ fetchShopTypes: { data: result } });
+      if (transform_to_dropdown_list) {
+        setDropdownList(
+          result.map((st) => ({ label: st.name, code: st._id }))
+        );
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setLoading(false);
   };
 
-  const dropdownList = useMemo(() => {
-    if (transform_to_dropdown_list) {
-      return data?.fetchShopTypes?.data?.map((st) => ({
-        label: st.name,
-        code: st._id,
-      }));
-    }
-    return [];
-  }, [data?.fetchShopTypes]);
-
-  // Use Effect
   useEffect(() => {
-    if (invoke_now) {
-      fetchShopTypes();
-    }
+    if (invoke_now) fetchShopTypes();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {

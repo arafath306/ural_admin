@@ -46,7 +46,7 @@ const UPLOAD_IMAGE_TO_S3: any = '';
 const E4E4E7: any = '';
 
 
-const UPLOAD_IMAGE_TO_S3 = '';
+
 
 // import { MAX_VIDEO_FILE_SIZE } from '@/lib/utils/constants';
 
