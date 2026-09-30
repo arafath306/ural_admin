@@ -32,7 +32,7 @@ import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
 
 // GraphQL
 
-import { ApolloCache, ApolloError, useMutation } from '@apollo/client';
+import { ApolloCache, ApolloError, useMutation } from '@/lib/api/graphql';
 import CustomGoogleMapsLocationBounds from '@/lib/ui/useable-components/google-maps/location-bounds-restaurant(vendor)';
 import { GoogleMapsContext } from '@/lib/context/global/google-maps.context';
 import { useTranslations } from 'next-intl';

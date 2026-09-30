@@ -61,7 +61,7 @@ import {
   ApolloError,
   useMutation,
   useQuery,
-} from '@apollo/client';
+} from '@/lib/api/graphql';
 import { useTranslations } from 'next-intl';
 import CustomPhoneTextField from '@/lib/ui/useable-components/phone-input-field';
 import { useShopTypes } from '@/lib/hooks/useShopType';

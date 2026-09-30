@@ -70,11 +70,9 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
   const { CURRENT_SYMBOL } = useConfiguration();
   const { showToast } = useContext(ToastContext);
 
-  if (!configuration) {
-    throw new Error(t('Cannot get the value of the Configuration Context'));
-  }
+  // Safe configuration fallback
 
-  const { deliveryRate, isPaidVersion } = configuration;
+  const deliveryRate = configuration?.deliveryRate ?? 50; const isPaidVersion = configuration?.isPaidVersion ?? false;
 
   const {
     restaurantByOwnerResponse,

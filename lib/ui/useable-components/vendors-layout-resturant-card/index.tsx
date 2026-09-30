@@ -76,11 +76,9 @@ export default function VendorsLayoutRestaurantCard({
 
   const configuration = useContext(ConfigurationContext);
 
-  if (!configuration) {
-    throw new Error(t('Cannot get the value of configuration context'));
-  }
+  // Safe configuration fallback
 
-  const { deliveryRate } = configuration;
+  const deliveryRate = configuration?.deliveryRate ?? 50;
   // Hooks
   const router = useRouter();
 

@@ -3,7 +3,7 @@ import { CREATE_VENDOR, GET_VENDORS } from '@/lib/api/graphql';
 
 
 // Core
-import { ApolloError, useMutation } from '@apollo/client';
+import { ApolloError, useMutation } from '@/lib/api/graphql';
 import { Form, Formik } from 'formik';
 import { useContext, useEffect, useState } from 'react';
 
