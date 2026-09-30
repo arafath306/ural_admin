@@ -1,4 +1,5 @@
 'use client';
+import '@/lib/api/graphql-globals';
 
 // Core
 

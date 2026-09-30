@@ -1,3 +1,4 @@
+import { EDIT_VENDOR, GET_VENDORS } from '@/lib/api/graphql';
 // Core
 import { ApolloError, useMutation } from '@apollo/client';
 import { Form, Formik } from 'formik';

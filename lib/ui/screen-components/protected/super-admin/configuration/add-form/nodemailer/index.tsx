@@ -1,4 +1,6 @@
 'use client';
+import { GET_CONFIGURATION, SAVE_EMAIL_CONFIGURATION, useMutation } from '@/lib/api/graphql';
+
 // Core
 import { Form, Formik } from 'formik';
 

@@ -1,3 +1,4 @@
+import { GET_RESTAURANT_PROFILE } from '@/lib/api/graphql';
 import React, { createContext, useState, useEffect, useContext } from 'react';
 
 import { RestaurantLayoutContext } from '@/lib/context/restaurant/layout-restaurant.context';

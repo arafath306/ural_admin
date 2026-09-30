@@ -1,3 +1,4 @@
+import { GET_RESTAURANT_DASHBOARD_ORDER_SALES_DETAILS_BY_PAYMENT_METHOD, useQueryGQL } from '@/lib/api/graphql';
 // React and third-party imports
 import React, { useContext, useMemo } from 'react';
 import { Divider } from 'primereact/divider';

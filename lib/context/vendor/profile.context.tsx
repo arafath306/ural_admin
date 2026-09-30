@@ -1,3 +1,4 @@
+import { GET_VENDOR_BY_ID } from '@/lib/api/graphql';
 // Core
 import React, { createContext, useState, useEffect, useContext } from 'react';
 

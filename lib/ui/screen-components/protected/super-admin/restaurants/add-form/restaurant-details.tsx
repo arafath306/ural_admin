@@ -1,4 +1,6 @@
 'use client';
+import { GET_CUISINES, GET_RESTAURANTS, useQueryGQL } from '@/lib/api/graphql';
+
 import { adminStoreService } from '@/lib/supabase/services/adminStoreService';
 
 import { useState } from 'react';

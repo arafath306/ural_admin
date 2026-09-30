@@ -1,4 +1,6 @@
 'use client';
+import { CREATE_VENDOR, GET_VENDORS } from '@/lib/api/graphql';
+
 
 // Core
 import { ApolloError, useMutation } from '@apollo/client';

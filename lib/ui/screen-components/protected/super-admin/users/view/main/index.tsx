@@ -1,3 +1,4 @@
+import { GET_USERS_PAGINATED, useQuery } from '@/lib/api/graphql';
 import React, { useEffect, useMemo, useState } from 'react';
 
 // Prime React

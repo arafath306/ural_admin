@@ -1,4 +1,6 @@
 'use client';
+import { GET_RESTAURANTS_BY_OWNER, useQueryGQL } from '@/lib/api/graphql';
+
 
 // Core
 import { createContext, useContext, useEffect, useState } from 'react';

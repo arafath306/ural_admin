@@ -1,4 +1,6 @@
 'use client';
+import { GET_ORDERS_BY_USER, GET_USER_BY_ID, useQuery } from '@/lib/api/graphql';
+
 import React, { useState } from 'react';
 import {
   TabView,

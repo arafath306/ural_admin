@@ -1,4 +1,4 @@
-// Auto-generated GraphQL mock exports for Supabase migration
+// Complete GraphQL mock exports for Supabase migration
 export const dummyDoc = {
   kind: 'Document',
   definitions: [
@@ -15,6 +15,32 @@ export const dummyDoc = {
 };
 
 export const gql = (strings: any, ...args: any[]) => dummyDoc;
+
+export const dummyUseQuery = (query?: any, options?: any): any => ({
+  data: undefined,
+  loading: false,
+  error: undefined,
+  refetch: async () => ({ data: undefined }),
+  fetchMore: async () => ({ data: undefined }),
+  startPolling: () => {},
+  stopPolling: () => {},
+});
+
+export const dummyUseMutation = (mutation?: any, options?: any): any => {
+  const mutate = async () => ({ data: {} });
+  return [mutate, { loading: false, error: undefined, data: undefined, reset: () => {} }];
+};
+
+export const dummyUseSubscription = (subscription?: any, options?: any): any => ({
+  data: undefined,
+  loading: false,
+  error: undefined,
+});
+
+export const useQuery = dummyUseQuery;
+export const useMutation = dummyUseMutation;
+export const useQueryGQL = dummyUseQuery;
+export const useSubscription = dummyUseSubscription;
 
 export const CREATE_FOOD = dummyDoc;
 export const CREATE_RESTAURANT = dummyDoc;

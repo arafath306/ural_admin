@@ -1,4 +1,6 @@
 'use client';
+import { GET_AUDIT_LOGS, useQuery } from '@/lib/api/graphql';
+
 import React, { useState } from 'react';
 
 

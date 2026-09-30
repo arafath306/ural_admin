@@ -1,3 +1,4 @@
+import { GET_DASHBOARD_SALES_BY_TYPE, useQueryGQL } from '@/lib/api/graphql';
 
 import { useConfiguration } from '@/lib/hooks/useConfiguration';
 

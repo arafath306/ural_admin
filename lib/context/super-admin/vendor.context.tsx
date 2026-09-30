@@ -1,4 +1,6 @@
 'use client';
+import { GET_VENDORS, useQueryGQL } from '@/lib/api/graphql';
+
 
 // Core
 import { createContext, useCallback, useEffect, useState } from 'react';
