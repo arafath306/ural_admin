@@ -16,8 +16,26 @@ import { AutoComplete, AutoCompleteSelectEvent } from 'primereact/autocomplete';
 import { useTranslations } from 'next-intl';
 import CustomShape from '../shapes';
 
-
-
+// Guard: check if _path has valid non-empty, non-NaN coordinates
+function hasValidPath(p: any): boolean {
+  try {
+    if (!p || !Array.isArray(p) || p.length === 0) return false;
+    const ring = p[0];
+    if (!Array.isArray(ring) || ring.length < 3) return false;
+    const first = ring[0];
+    if (!Array.isArray(first) || first.length < 2) return false;
+    const [lng, lat] = first;
+    return (
+      typeof lng === 'number' &&
+      typeof lat === 'number' &&
+      !isNaN(lng) &&
+      !isNaN(lat) &&
+      (Math.abs(lng) > 0.0001 || Math.abs(lat) > 0.0001)
+    );
+  } catch {
+    return false;
+  }
+}
 
 export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoogleMapsBoundComponentProps) {
   useEffect(() => {
@@ -59,7 +77,7 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
     }
   };
 
-  const createPolygonAroundPoint = (center: { lat: number; lng: number }, sizeMeters = 100): ILocationPoint[] => {
+  const createPolygonAroundPoint = (center: { lat: number; lng: number }, sizeMeters = 500): ILocationPoint[] => {
     const latOffset = sizeMeters * 0.0000089;
     const lngOffset = (sizeMeters * 0.0000089) / Math.cos((center.lat * Math.PI) / 180);
     return [
@@ -79,12 +97,12 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
 
       let newPath: ILocationPoint[] = [];
       if (deliveryZoneType === 'polygon') {
-        newPath = createPolygonAroundPoint(centerPoint, 200);
+        newPath = createPolygonAroundPoint(centerPoint, 500);
       }
       setPath(newPath);
 
       if (mapRef.current) {
-        mapRef.current.setView([centerPoint.lat, centerPoint.lng], 16);
+        mapRef.current.setView([centerPoint.lat, centerPoint.lng], 14);
       }
     }
   };
@@ -93,17 +111,30 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
   useEffect(() => {
     if (!mapContainerRef.current) return;
     
-    let initialCenter = center;
-    let initialPath = path;
+    let initialCenter = { ...DEFAULT_CENTER };
+    let initialPath = [...DEFAULT_POLYGON];
 
-    if (_path && _path.length > 0 && _path[0] && _path[0].length > 0) {
-      initialPath = transformPolygon(_path[0]);
-      initialCenter = calculatePolygonCentroid(_path[0]);
-      setPath(initialPath);
-      setCenter(initialCenter);
+    // Only use _path if it has valid real coordinates
+    if (hasValidPath(_path)) {
+      try {
+        const transformed = transformPolygon(_path[0]);
+        const clean = transformed.filter(p => !isNaN(p.lat) && !isNaN(p.lng));
+        if (clean.length > 2) {
+          const centroid = calculatePolygonCentroid(_path[0]);
+          if (!isNaN(centroid.lat) && !isNaN(centroid.lng) && (Math.abs(centroid.lat) > 0.0001 || Math.abs(centroid.lng) > 0.0001)) {
+            initialPath = clean;
+            initialCenter = centroid;
+          }
+        }
+      } catch (e) {
+        console.warn('Invalid zone path, using default center', e);
+      }
     }
 
-    const map = L.map(mapContainerRef.current).setView([initialCenter.lat, initialCenter.lng], 14);
+    setPath(initialPath);
+    setCenter(initialCenter);
+
+    const map = L.map(mapContainerRef.current).setView([initialCenter.lat, initialCenter.lng], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
@@ -154,7 +185,7 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
     };
   }, []);
 
-  // Update Polygon on state change
+  // Draw initial polygon when path changes (only once at mount)
   useEffect(() => {
     if (!mapRef.current) return;
     const map = mapRef.current;
@@ -163,8 +194,9 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
       map.removeLayer(polygonRef.current);
     }
 
-    if (path.length > 0) {
-      const latlngs = path.map(p => [p.lat, p.lng] as L.LatLngTuple);
+    const validPath = path.filter(p => !isNaN(p.lat) && !isNaN(p.lng));
+    if (validPath.length > 2) {
+      const latlngs = validPath.map(p => [p.lat, p.lng] as L.LatLngTuple);
       polygonRef.current = L.polygon(latlngs, { color: '#000000', pmIgnore: false }).addTo(map);
       
       const updateCoordinates = () => {
@@ -179,9 +211,7 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
       polygonRef.current.on('pm:dragend', updateCoordinates);
       polygonRef.current.on('pm:markerdragend', updateCoordinates);
 
-      if (path.length > 2) {
-        map.fitBounds(polygonRef.current.getBounds());
-      }
+      map.fitBounds(polygonRef.current.getBounds(), { padding: [20, 20] });
     }
   }, [path]);
 
@@ -193,10 +223,11 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
   };
 
   return (
-    <div className="flex flex-col h-[70vh] rounded shadow-lg bg-white relative">
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] w-11/12 md:w-1/2">
-        <span className="p-input-icon-left w-full shadow rounded bg-white flex items-center">
-          <FontAwesomeIcon icon={faMapMarker} className="ml-3 mr-2 text-gray-500" />
+    <div className="flex flex-col h-full rounded shadow-lg bg-white relative">
+      {/* Search Bar */}
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] w-11/12 md:w-2/3">
+        <span className="p-input-icon-left w-full shadow-lg rounded-lg bg-white flex items-center border border-gray-200">
+          <FontAwesomeIcon icon={faMapMarker} className="ml-3 mr-2 text-gray-400" />
           <AutoComplete
             value={inputValue}
             suggestions={options}
@@ -204,9 +235,9 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
             field="description"
             onChange={(e) => setInputValue(e.value?.description || e.value)}
             onSelect={onSelect}
-            placeholder={t('SearchLocation')}
+            placeholder="Search location..."
             className="w-full"
-            inputClassName="w-full px-2 py-3 rounded border-none focus:outline-none"
+            inputClassName="w-full px-2 py-3 rounded-lg border-none focus:outline-none text-sm"
             pt={{
               root: { className: 'w-full' },
               input: { className: 'w-full px-2 py-3 border-none focus:outline-none' }
@@ -214,8 +245,10 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
           />
         </span>
       </div>
+      {/* Map */}
       <div ref={mapContainerRef} className="flex-1 w-full rounded-t z-0" />
-      <div className="flex items-center justify-between p-4 bg-gray-100 rounded-b z-10">
+      {/* Footer */}
+      <div className="flex items-center justify-between p-3 bg-gray-50 border-t border-gray-200 rounded-b z-10">
         <CustomShape
           onSetPath={(newPath) => {
             setDeliveryZoneType('polygon');
@@ -225,12 +258,18 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
           center={center}
           path={path}
         />
-        <button
-          onClick={handleSave}
-          className="px-6 py-2 bg-black text-white rounded font-medium hover:bg-gray-800 transition"
-        >
-          {t('Save')}
-        </button>
+        <div className="flex items-center gap-3">
+          {path.length > 2 && (
+            <span className="text-xs text-green-600 font-medium">✅ {path.length} points selected</span>
+          )}
+          <button
+            onClick={handleSave}
+            disabled={path.length < 3}
+            className="px-5 py-2 bg-black text-white text-sm rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            Save Zone
+          </button>
+        </div>
       </div>
     </div>
   );
