@@ -24,7 +24,12 @@ import 'primereact/resources/themes/lara-light-cyan/theme.css';
 import 'primeicons/primeicons.css';
 import './global.css';
 
-// Apollo
+import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
+
+const mockClient = new ApolloClient({
+  uri: '/api/graphql',
+  cache: new InMemoryCache(),
+});
 
 export default function RootLayout({
   children,
@@ -46,7 +51,8 @@ export default function RootLayout({
       </head>
       <body className={'flex flex-col flex-wrap'}>
         <PrimeReactProvider value={value}>
-                      <ConfigurationProvider>
+                      <ApolloProvider client={mockClient}>
+              <ConfigurationProvider>
               <LayoutProvider>
                 <UserProvider>
                   <SidebarProvider>
@@ -55,6 +61,7 @@ export default function RootLayout({
                 </UserProvider>
               </LayoutProvider>
             </ConfigurationProvider>
+              </ApolloProvider>
                   </PrimeReactProvider>
       </body>
     </html>
