@@ -1,204 +1,81 @@
-'use client';
 
-// Core
-import { useCallback, useContext, useEffect, useState } from 'react';
-
-// Prime React
-import { FilterMatchMode } from 'primereact/api';
-
-// Interface and Types
-import {
-  IActionMenuItem,
-  IFood,
-  IFoodNew,
-} from '@/lib/utils/interfaces';
-
-// Components
+import { useContext, useEffect, useState, useDeferredValue } from 'react';
 import Table from '@/lib/ui/useable-components/table';
-import FoodsTableHeader from '../header/table-header';
-import { FOODS_TABLE_COLUMNS } from '@/lib/ui/useable-components/table/columns/foods-columns';
+import { FOOD_TABLE_COLUMNS } from '@/lib/ui/useable-components/table/columns/foods-columns';
 import CustomDialog from '@/lib/ui/useable-components/delete-dialog';
-
-// Context
-import { FoodsContext } from '@/lib/context/restaurant/foods.context';
 import { RestaurantLayoutContext } from '@/lib/context/restaurant/layout-restaurant.context';
-
-// Toast & Localization
-import useToast from '@/lib/hooks/useToast';
+import FoodTableHeader from '../header/table-header';
 import { useTranslations } from 'next-intl';
+import { adminFoodService } from '@/lib/supabase/services/adminFoodService';
+import useToast from '@/lib/hooks/useToast';
 
-// Supabase
-import { adminStoreService } from '@/lib/supabase/services/adminStoreService';
-import { supabase } from '@/lib/supabase/client';
-
-function mapToFoodNew(f: IFood): IFoodNew {
-  return {
-    _id: f._id,
-    title: f.title || '',
-    description: f.description || '',
-    image: f.image || '',
-    isActive: Boolean(f.isActive),
-    isOutOfStock: Boolean(f.isOutOfStock),
-    category: f.subCategory ? { label: f.subCategory, code: f.subCategory } : null,
-    subCategory: null,
-    variations: f.variations || [],
-    __typename: 'Food',
-  };
-}
-
-export default function FoodsMain() {
+export default function FoodMain({ setIsAddFoodVisible, setFood }: any) {
+  const { restaurantLayoutContextData } = useContext(RestaurantLayoutContext);
+  const restaurantId = restaurantLayoutContextData?.restaurantId || '';
   const t = useTranslations();
   const { showToast } = useToast();
 
-  const {
-    onFoodFormVisible,
-    onSetFoodContextData,
-    onActiveStepChange,
-  } = useContext(FoodsContext);
-
-  const { restaurantLayoutContextData } = useContext(RestaurantLayoutContext);
-  const restaurantId =
-    restaurantLayoutContextData?.restaurantId ||
-    '55555555-5555-5555-5555-555555555551';
-
+  const [foods, setFoods] = useState<any[]>([]);
+  const [selectedFoods, setSelectedFoods] = useState<any[]>([]);
   const [deleteId, setDeleteId] = useState('');
-  const [foods, setFoods] = useState<IFoodNew[]>([]);
-  const [rawFoods, setRawFoods] = useState<IFood[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mutationLoading, setMutationLoading] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState<IFoodNew[]>([]);
+  const [deleting, setDeleting] = useState(false);
   const [globalFilterValue, setGlobalFilterValue] = useState('');
-  const [filters] = useState({
-    global: { value: '' as string | null, matchMode: FilterMatchMode.CONTAINS },
-  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const deferredSearch = useDeferredValue(globalFilterValue);
 
-  const fetchFoods = useCallback(async () => {
+  const fetchFoods = async () => {
     if (!restaurantId) return;
+    setLoading(true);
     try {
-      setLoading(true);
-      const res = await adminStoreService.fetchFoods(restaurantId);
-      setRawFoods(res);
-      setFoods(res.map(mapToFoodNew));
+      const { data, count } = await adminFoodService.getFoods(restaurantId, currentPage, rowsPerPage, deferredSearch);
+      setFoods(data.map(c => ({ _id: c.id, title: c.title, description: c.description, image: c.image, category: c.categories?.title })));
+      setTotalRecords(count);
     } catch (err) {
-      console.error('Error fetching foods:', err);
+      showToast({ type: 'error', title: t('Error'), message: t('Failed to fetch foods') });
     } finally {
       setLoading(false);
     }
-  }, [restaurantId]);
+  };
 
-  useEffect(() => {
-    fetchFoods();
-  }, [fetchFoods]);
-
-  useEffect(() => {
-    if (!restaurantId) return;
-    const channel = supabase
-      .channel('foods-sync-' + restaurantId)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'restaurants',
-          filter: `id=eq.${restaurantId}`,
-        },
-        () => {
-          fetchFoods();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [restaurantId, fetchFoods]);
+  useEffect(() => { fetchFoods(); }, [restaurantId, currentPage, rowsPerPage, deferredSearch]);
 
   const handleDelete = async () => {
-    if (!deleteId || !restaurantId) return;
+    setDeleting(true);
     try {
-      setMutationLoading(true);
-      const updated = rawFoods.filter((f) => f._id !== deleteId);
-      await adminStoreService.saveFoods(restaurantId, updated);
-      setRawFoods(updated);
-      setFoods(updated.map(mapToFoodNew));
-      showToast({
-        type: 'success',
-        title: t('Delete Food'),
-        message: `${t('Food has been deleted successfully')}.`,
-      });
+      await adminFoodService.deleteFood(deleteId);
+      showToast({ type: 'success', title: t('Success'), message: t('Food deleted') });
       setDeleteId('');
-    } catch {
-      showToast({
-        type: 'error',
-        title: t('Delete Food'),
-        message: t('Food delete failed'),
-      });
+      fetchFoods();
+    } catch (err) {
+      showToast({ type: 'error', title: t('Error'), message: t('Delete failed') });
     } finally {
-      setMutationLoading(false);
+      setDeleting(false);
     }
   };
 
-  const filteredFoods = foods.filter((f) => {
-    if (!globalFilterValue) return true;
-    return (
-      f.title.toLowerCase().includes(globalFilterValue.toLowerCase()) ||
-      (f.description && f.description.toLowerCase().includes(globalFilterValue.toLowerCase()))
-    );
-  });
-
-  const menuItems: IActionMenuItem<IFoodNew>[] = [
-    {
-      label: t('Edit'),
-      command: (data?: IFoodNew) => {
-        if (data) {
-          onActiveStepChange(0);
-          onSetFoodContextData({
-            isEditing: true,
-            food: {
-              _id: data._id,
-              data: data,
-              variations: data.variations || [],
-            },
-          });
-          onFoodFormVisible(true);
-        }
-      },
-    },
-    {
-      label: t('Delete'),
-      command: (data?: IFoodNew) => {
-        if (data) {
-          setDeleteId(data._id);
-        }
-      },
-    },
+  const menuItems = [
+    { label: t('Edit'), command: (data: any) => { if(data) { setIsAddFoodVisible(true); setFood(data); } } },
+    { label: t('Delete'), command: (data: any) => { if(data) setDeleteId(data._id); } }
   ];
 
   return (
     <div className="p-3">
       <Table
-        header={
-          <FoodsTableHeader
-            globalFilterValue={globalFilterValue}
-            onGlobalFilterChange={(e) => setGlobalFilterValue(e.target.value)}
-          />
-        }
-        data={filteredFoods}
-        filters={filters}
-        setSelectedData={setSelectedProducts}
-        selectedData={selectedProducts}
-        columns={FOODS_TABLE_COLUMNS({ menuItems })}
+        header={<FoodTableHeader globalFilterValue={globalFilterValue} onGlobalFilterChange={(e: any) => setGlobalFilterValue(e.target.value)} />}
+        data={foods}
+        setSelectedData={setSelectedFoods}
+        selectedData={selectedFoods}
         loading={loading}
+        columns={FOOD_TABLE_COLUMNS({ menuItems })}
+        totalRecords={totalRecords}
+        currentPage={currentPage}
+        rowsPerPage={rowsPerPage}
+        onPageChange={(page, rows) => { setCurrentPage(page); setRowsPerPage(rows); }}
       />
-      <CustomDialog
-        loading={mutationLoading}
-        visible={!!deleteId}
-        onHide={() => {
-          setDeleteId('');
-        }}
-        onConfirm={handleDelete}
-        message={t('Are you sure you want to delete this food item?')}
-      />
+      <CustomDialog loading={deleting} visible={!!deleteId} onHide={() => setDeleteId('')} onConfirm={handleDelete} message={t('Are you sure?')} />
     </div>
   );
 }

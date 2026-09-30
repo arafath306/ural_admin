@@ -1,183 +1,81 @@
-// Core
-import { useMutation } from '@apollo/client';
-import { useContext, useEffect, useState } from 'react';
 
-// Interface and Types
-import {
-  IActionMenuItem,
-  IAddon,
-  IAddonPaginatedByRestaurantResponse,
-  IAddonMainComponentsProps,
-  IQueryResult,
-} from '@/lib/utils/interfaces';
-
-// Components
+import { useContext, useEffect, useState, useDeferredValue } from 'react';
 import Table from '@/lib/ui/useable-components/table';
 import { ADDON_TABLE_COLUMNS } from '@/lib/ui/useable-components/table/columns/addon-columns';
-import CategoryTableHeader from '../header/table-header';
-
-// Utilities and Data
 import CustomDialog from '@/lib/ui/useable-components/delete-dialog';
-
-// Context
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
-import useToast from '@/lib/hooks/useToast';
-import useDebounce from '@/lib/hooks/useDebounce';
-
-// GraphQL
-import { DELETE_ADDON, GET_OPTIONS_BY_RESTAURANT_ID } from '@/lib/api/graphql';
-import { GET_RESTAURANT_ADDONS_PAGINATED } from '@/lib/api/graphql/queries/addon';
-
-// Context
 import { RestaurantLayoutContext } from '@/lib/context/restaurant/layout-restaurant.context';
+import AddonTableHeader from '../header/table-header';
 import { useTranslations } from 'next-intl';
+import { adminAddonService } from '@/lib/supabase/services/adminAddonService';
+import useToast from '@/lib/hooks/useToast';
 
-export default function OptionMain({
-  setIsAddAddonVisible,
-  setAddon,
-}: IAddonMainComponentsProps) {
-  // Context
+export default function AddonMain({ setIsAddAddonVisible, setAddon }: any) {
   const { restaurantLayoutContextData } = useContext(RestaurantLayoutContext);
   const restaurantId = restaurantLayoutContextData?.restaurantId || '';
-
-  // Hooks
   const t = useTranslations();
   const { showToast } = useToast();
 
-  // State - Table
+  const [addons, setAddons] = useState<any[]>([]);
+  const [selectedAddons, setSelectedAddons] = useState<any[]>([]);
   const [deleteId, setDeleteId] = useState('');
-  const [selectedProducts, setSelectedProducts] = useState<IAddon[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
   const [globalFilterValue, setGlobalFilterValue] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const debouncedSearch = useDebounce(globalFilterValue, 500);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const deferredSearch = useDeferredValue(globalFilterValue);
 
-  // Query
-  const { data, loading } = useQueryGQL(
-    GET_RESTAURANT_ADDONS_PAGINATED,
-    {
-      restaurantId,
-      page: currentPage,
-      limit: rowsPerPage,
-      search: debouncedSearch || undefined,
-    },
-    {
-      fetchPolicy: 'network-only',
-      enabled: !!restaurantId,
-      onCompleted: onFetchAddonsByRestaurantCompleted,
-      onError: onErrorFetchAddonsByRestaurant,
+  const fetchAddons = async () => {
+    if (!restaurantId) return;
+    setLoading(true);
+    try {
+      const { data, count } = await adminAddonService.getAddons(restaurantId, currentPage, rowsPerPage, deferredSearch);
+      setAddons(data.map(c => ({ _id: c.id, title: c.title, description: c.description })));
+      setTotalRecords(count);
+    } catch (err) {
+      showToast({ type: 'error', title: t('Error'), message: t('Failed to fetch addons') });
+    } finally {
+      setLoading(false);
     }
-  ) as IQueryResult<
-    IAddonPaginatedByRestaurantResponse | undefined,
-    undefined
-  >;
-
-  //Mutation
-  const [deleteCategory, { loading: mutationLoading }] = useMutation(
-    DELETE_ADDON,
-    {
-      variables: {
-        id: deleteId,
-        restaurant: restaurantId,
-      },
-      refetchQueries: [
-        {
-          query: GET_OPTIONS_BY_RESTAURANT_ID,
-          variables: { id: restaurantId },
-        },
-      ],
-    }
-  );
-
-  // Handlers
-  const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setGlobalFilterValue(e.target.value);
   };
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [debouncedSearch]);
+  useEffect(() => { fetchAddons(); }, [restaurantId, currentPage, rowsPerPage, deferredSearch]);
 
-  // Restaurant Profile Complete
-  function onFetchAddonsByRestaurantCompleted() {}
-  // Restaurant Zone Info Error
-  function onErrorFetchAddonsByRestaurant() {
-    showToast({
-      type: 'error',
-      title: t('Addons Fetch'),
-      message: t('Addons fetch failed'),
-      duration: 2500,
-    });
-  }
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await adminAddonService.deleteAddon(deleteId);
+      showToast({ type: 'success', title: t('Success'), message: t('Addon deleted') });
+      setDeleteId('');
+      fetchAddons();
+    } catch (err) {
+      showToast({ type: 'error', title: t('Error'), message: t('Delete failed') });
+    } finally {
+      setDeleting(false);
+    }
+  };
 
-  // Constants
-  const menuItems: IActionMenuItem<IAddon>[] = [
-    {
-      label: t('Edit'),
-      command: (data?: IAddon) => {
-        if (data) {
-          setIsAddAddonVisible(true);
-
-          setAddon(data);
-        }
-      },
-    },
-    {
-      label: t('Delete'),
-      command: (data?: IAddon) => {
-        if (data) {
-          setDeleteId(data._id);
-        }
-      },
-    },
+  const menuItems = [
+    { label: t('Edit'), command: (data: any) => { if(data) { setIsAddAddonVisible(true); setAddon(data); } } },
+    { label: t('Delete'), command: (data: any) => { if(data) setDeleteId(data._id); } }
   ];
 
   return (
     <div className="p-3">
       <Table
-        header={
-          <CategoryTableHeader
-            globalFilterValue={globalFilterValue}
-            onGlobalFilterChange={onGlobalFilterChange}
-          />
-        }
-        data={data?.restaurantAddonsPaginated?.data || []}
-        setSelectedData={setSelectedProducts}
-        selectedData={selectedProducts}
+        header={<AddonTableHeader globalFilterValue={globalFilterValue} onGlobalFilterChange={(e: any) => setGlobalFilterValue(e.target.value)} />}
+        data={addons}
+        setSelectedData={setSelectedAddons}
+        selectedData={selectedAddons}
         loading={loading}
         columns={ADDON_TABLE_COLUMNS({ menuItems })}
-        totalRecords={data?.restaurantAddonsPaginated?.totalCount ?? 0}
-        currentPage={
-          data?.restaurantAddonsPaginated?.currentPage ?? currentPage
-        }
+        totalRecords={totalRecords}
+        currentPage={currentPage}
         rowsPerPage={rowsPerPage}
-        onPageChange={(page, rowCount) => {
-          setCurrentPage(page);
-          setRowsPerPage(rowCount);
-        }}
+        onPageChange={(page, rows) => { setCurrentPage(page); setRowsPerPage(rows); }}
       />
-      <CustomDialog
-        loading={mutationLoading}
-        visible={!!deleteId}
-        onHide={() => {
-          setDeleteId('');
-        }}
-        onConfirm={async () => {
-          await deleteCategory({
-            variables: { id: deleteId },
-            onCompleted: () => {
-              showToast({
-                type: 'success',
-                title: t('Delete Add-on'),
-                message: t('Add-on has been deleted successfully'),
-                duration: 3000,
-              });
-              setDeleteId('');
-            },
-          });
-        }}
-        message={t('Are you sure you want to delete this Add-on?')}
-      />
+      <CustomDialog loading={deleting} visible={!!deleteId} onHide={() => setDeleteId('')} onConfirm={handleDelete} message={t('Are you sure?')} />
     </div>
   );
 }
