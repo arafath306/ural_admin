@@ -18,10 +18,10 @@ import { IOrdersByUserResponse } from '@/lib/utils/interfaces/orders.interface';
 import { Card } from 'primereact/card';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { useQuery } from '@apollo/client';
 
-import { GET_ORDERS_BY_USER } from '@/lib/api/graphql/queries/order';
-import { GET_USER_BY_ID } from '@/lib/api/graphql';
+
+
+
 import { IExtendedOrder } from '@/lib/utils/interfaces';
 import { useTranslations } from 'next-intl';
 

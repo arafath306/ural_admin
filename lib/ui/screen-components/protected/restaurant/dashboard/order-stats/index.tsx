@@ -1,8 +1,6 @@
 // Component
-import {
-  GET_RESTAURANT_DASHBOARD_ORDER_SALES_DETAILS_BY_PAYMENT_METHOD,
-} from '@/lib/api/graphql/queries/dashboard';
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
+
 import {
   IDashboardOrderStatsComponentsProps,
   IDashboardRestaurantOrdersSalesStatsResponseGraphQL,
@@ -34,23 +32,7 @@ export default function UserStats({
   // COntext
   const { CURRENCY_CODE } = useConfiguration();
 
-  const { data, loading } = useQueryGQL(
-    GET_RESTAURANT_DASHBOARD_ORDER_SALES_DETAILS_BY_PAYMENT_METHOD,
-    {
-      restaurant: restaurantId,
-      dateKeyword: dateFilter?.dateKeyword,
-      starting_date: dateFilter?.startDate,
-      ending_date: dateFilter?.endDate,
-    },
-    {
-      fetchPolicy: 'cache-and-network',
-      debounceMs: 300,
-      enabled: !!restaurantId,
-    }
-  ) as IQueryResult<
-    IDashboardRestaurantOrdersSalesStatsResponseGraphQL | undefined,
-    undefined
-  >;
+  const { data, loading, refetch } = { data: null, loading: false, refetch: () => {} };
 
   const dashboardUsers = useMemo(() => {
     if (!data) return null;

@@ -29,7 +29,7 @@ import CustomUploadImageComponent from '@/lib/ui/useable-components/upload/uploa
 import { VendorEditSchema } from '@/lib/utils/schema';
 
 // GraphQL
-import { EDIT_VENDOR } from '@/lib/api/graphql';
+
 
 // Icons
 import { faEnvelope } from '@fortawesome/free-solid-svg-icons';

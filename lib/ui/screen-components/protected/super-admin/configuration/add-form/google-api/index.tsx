@@ -19,11 +19,8 @@ import { IGoogleApiForm } from '@/lib/utils/interfaces/configurations.interface'
 import { GoogleApiValidationSchema } from '@/lib/utils/schema';
 
 // GraphQL
-import {
-  GET_CONFIGURATION,
-  SAVE_GOOGLE_API_KEY_CONFIGURATION,
-} from '@/lib/api/graphql';
-import { useMutation } from '@apollo/client';
+
+
 
 const GoogleApiAddForm = () => {
   // Hooks

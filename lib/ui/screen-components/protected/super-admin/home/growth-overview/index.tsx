@@ -5,8 +5,8 @@ import { useEffect, useMemo, useState } from 'react';
 
 // Prime React
 import { Chart } from 'primereact/chart';
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
-import { GET_DASHBOARD_USERS_BY_YEAR } from '@/lib/api/graphql';
+
+
 import {
   IDashboardUsersByYearResponseGraphQL,
   IQueryResult,

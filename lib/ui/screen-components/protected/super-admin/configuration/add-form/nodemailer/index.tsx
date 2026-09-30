@@ -22,8 +22,8 @@ import { INodeMailerForm } from '@/lib/utils/interfaces/configurations.interface
 import { NodeMailerValidationSchema } from '@/lib/utils/schema';
 
 // GraphQL
-import { useMutation } from '@apollo/client';
-import { GET_CONFIGURATION, SAVE_EMAIL_CONFIGURATION } from '@/lib/api/graphql';
+
+
 
 const NodeMailerAddForm = () => {
   // Hooks

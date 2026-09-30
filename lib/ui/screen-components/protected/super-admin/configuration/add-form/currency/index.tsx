@@ -25,11 +25,8 @@ import { currencies, currenciesSymbol } from '@/lib/utils/constants/currency';
 import { adminConfigService } from '@/lib/supabase/services/adminConfigService';
 
 // GraphQL
-import {
-  GET_CONFIGURATION,
-  SAVE_CURRENCY_CONFIGURATION,
-} from '@/lib/api/graphql';
-import { useMutation } from '@apollo/client';
+
+
 
 const CurrencyAddForm = () => {
   const { CURRENCY_CODE, CURRENT_SYMBOL } = useConfiguration();
@@ -49,12 +46,7 @@ const CurrencyAddForm = () => {
     currencySymbol: initialSymbol as unknown as IDropdownSelectItem,
   };
 
-  const [mutate] = useMutation(
-    SAVE_CURRENCY_CONFIGURATION,
-    {
-      refetchQueries: [{ query: GET_CONFIGURATION }],
-    }
-  );
+  const [mutate] = [() => {}];
 
   const handleSubmit = async (values: ICurrencyForm) => {
     const currency = values?.currency?.code || 'BDT';

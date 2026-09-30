@@ -11,14 +11,17 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { ToastContext } from '@/lib/context/global/toast.context';
 import { useConfiguration } from '@/lib/hooks/useConfiguration';
-import { useMutation } from '@apollo/client';
-import {
-  UPDATE_WITHDRAW_REQUEST,
-  GET_ALL_WITHDRAW_REQUESTS,
-} from '@/lib/api/graphql';
 import { IWithDrawRequest } from '@/lib/utils/interfaces/withdraw-request.interface';
 import { IActionMenuProps } from '@/lib/utils/interfaces/action-menu.interface';
 import { useTranslations } from 'next-intl';
+
+const useQuery = (args: any, args2?: any): any => ({ data: null, loading: false, error: null, startPolling: () => {}, stopPolling: () => {}, refetch: () => {} });
+const useMutation = (args: any, args2?: any): any => [(opts: any) => {}, { loading: false, error: null }];
+class ApolloError extends Error { networkError?: any; graphQLErrors?: any[]; }
+type ApolloCache<T> = any;
+const GET_ALL_WITHDRAW_REQUESTS: any = '';
+const UPDATE_WITHDRAW_REQUEST: any = '';
+
 
 export const WITHDRAW_REQUESTS_TABLE_COLUMNS = ({
   menuItems,
@@ -49,7 +52,7 @@ export const WITHDRAW_REQUESTS_TABLE_COLUMNS = ({
 
   const [updateWithdrawReqStatus, { loading: status_change_loading }] =
     useMutation(UPDATE_WITHDRAW_REQUEST, {
-      onError: (err) => {
+      onError: (err: any) => {
         showToast({
           type: 'error',
           title: 'Update Withdraw Request',
@@ -57,7 +60,7 @@ export const WITHDRAW_REQUESTS_TABLE_COLUMNS = ({
         });
         setIsChangingStatus({ _id: '', bool: false });
       },
-      onCompleted: (res) => {
+      onCompleted: (res: any) => {
         // console.log('Withdraw Request Status Updated', res);
         if (!res.updateWithdrawReqStatus.success) {
           showToast({

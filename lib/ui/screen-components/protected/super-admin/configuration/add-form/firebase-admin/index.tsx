@@ -18,11 +18,8 @@ import { IFirebaseForm } from '@/lib/utils/interfaces/configurations.interface';
 import { FirebaseValidationSchema } from '@/lib/utils/schema';
 
 // GraphQL
-import {
-  GET_CONFIGURATION,
-  SAVE_FIREBASE_CONFIGURATION,
-} from '@/lib/api/graphql';
-import { useMutation } from '@apollo/client';
+
+
 
 const FirebaseAdminAddForm = () => {
   // Hooks to fetch environment variables

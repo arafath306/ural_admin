@@ -32,7 +32,7 @@ import {
 } from '@/lib/utils/schema';
 
 // GraphQL
-import { CREATE_VENDOR, GET_VENDORS } from '@/lib/api/graphql';
+
 
 // Icons
 import { RestaurantsContext } from '@/lib/context/super-admin/restaurants.context';

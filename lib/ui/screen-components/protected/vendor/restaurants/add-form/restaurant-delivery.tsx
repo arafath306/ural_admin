@@ -31,10 +31,7 @@ import { DeliverySchema } from '@/lib/utils/schema/delivery';
 import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
 
 // GraphQL
-import {
-  GET_RESTAURANTS_BY_OWNER,
-  UPDATE_RESTAURANT_DELIVERY,
-} from '@/lib/api/graphql';
+
 import { ApolloCache, ApolloError, useMutation } from '@apollo/client';
 import CustomGoogleMapsLocationBoundsVendorLayoutRestaurant from '@/lib/ui/useable-components/google-maps/location-bounds-restaurant(vendor-layout)';
 import { GoogleMapsContext } from '@/lib/context/global/google-maps.context';

@@ -41,14 +41,10 @@ import { IEditState, IShopType } from '@/lib/utils/interfaces';
 import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
 
 // Schemas
-import {
-  CREATE_RESTAURANT,
-  GET_CUISINES,
-  GET_RESTAURANTS,
-} from '@/lib/api/graphql';
+
 import { RestaurantsContext } from '@/lib/context/super-admin/restaurants.context';
 import { ToastContext } from '@/lib/context/global/toast.context';
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
 import CustomNumberField from '@/lib/ui/useable-components/number-input-field';
 import CustomUploadImageComponent from '@/lib/ui/useable-components/upload/upload-image';
 import {

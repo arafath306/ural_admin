@@ -1,58 +1,18 @@
-//screen components
-import ShopTypesScreenHeader from '@/lib/ui/screen-components/protected/super-admin/shop-types/view/header/screen-header';
-import ShopTypesForm from '@/lib/ui/screen-components/protected/super-admin/shop-types/form';
-import ShopTypesMain from '@/lib/ui/screen-components/protected/super-admin/shop-types/view/main';
 
-// Interface
-import { IShopType, IEditState } from '@/lib/utils/interfaces';
-
-//hooks
+'use client';
 import { useState } from 'react';
+import ShopTypeAddForm from '@/lib/ui/screen-components/protected/super-admin/shop-type/add-form';
+import ShopTypesHeader from '@/lib/ui/screen-components/protected/super-admin/shop-type/view/header/screen-header';
+import ShopTypeMain from '@/lib/ui/screen-components/protected/super-admin/shop-type/view/main';
 
-export default function CouponsScreen() {
-  //states
+export default function ShopTypeScreen() {
   const [visible, setVisible] = useState(false);
-  const [isEditing, setIsEditing] = useState<IEditState<IShopType>>({
-    bool: false,
-    data: {
-      __typename: '',
-      _id: '',
-      isActive: false,
-      image: '',
-      name: '',
-    },
-  });
-
-  //toggle visibility
-  const handleButtonClick = () => {
-    setVisible(true);
-    setIsEditing({
-      bool: false,
-      data: {
-        __typename: '',
-        _id: '',
-        isActive: false,
-        image: '',
-        name: '',
-      },
-    });
-  };
-
+  const [isEditing, setIsEditing] = useState<any>({ bool: false, data: null });
   return (
     <div className="screen-container">
-      <ShopTypesScreenHeader handleButtonClick={handleButtonClick} />
-      <ShopTypesMain
-        setVisible={setVisible}
-        visible={visible}
-        isEditing={isEditing}
-        setIsEditing={setIsEditing}
-      />
-      <ShopTypesForm
-        isEditing={isEditing}
-        visible={visible}
-        setIsEditing={setIsEditing}
-        setVisible={setVisible}
-      />
+      <ShopTypesHeader setVisible={setVisible} />
+      <ShopTypeMain setIsEditing={setIsEditing} setVisible={setVisible} />
+      <ShopTypeAddForm visible={visible} onHide={() => { setVisible(false); setIsEditing({ bool: false, data: null }); }} isEditing={isEditing} />
     </div>
   );
 }

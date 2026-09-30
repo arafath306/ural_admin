@@ -11,10 +11,9 @@ import {
 } from '@/lib/utils/interfaces';
 
 // API
-import { GET_CONFIGURATION } from '@/lib/api/graphql';
+
 
 // Hooks
-import { useLazyQueryQL } from '@/lib/hooks/useLazyQueryQL';
 
 // Supabase Configuration Service
 import {
@@ -97,13 +96,7 @@ export const ConfigurationProvider: React.FC<IConfigurationProviderProps> = ({
     IConfiguration | undefined
   >();
 
-  // Optional GraphQL query
-  const { fetch, loading, error, data } = useLazyQueryQL(GET_CONFIGURATION, {
-    debounceMs: 300,
-  }) as ILazyQueryResult<
-    { configuration: IConfiguration } | undefined,
-    undefined
-  >;
+
 
   // Load from Supabase service
   const loadSupabaseConfig = useCallback(async () => {
@@ -195,24 +188,7 @@ export const ConfigurationProvider: React.FC<IConfigurationProviderProps> = ({
     };
   }, [loadSupabaseConfig]);
 
-  const fetchConfiguration = useCallback(() => {
-    try {
-      fetch();
-    } catch (e) {}
-  }, [fetch]);
 
-  useEffect(() => {
-    fetchConfiguration();
-  }, [fetchConfiguration]);
-
-  useEffect(() => {
-    if (data?.configuration) {
-      setConfiguration((prev) => ({
-        ...(prev || {}),
-        ...data.configuration,
-      } as IConfiguration));
-    }
-  }, [data]);
 
   return (
     <ConfigurationContext.Provider value={configuration}>

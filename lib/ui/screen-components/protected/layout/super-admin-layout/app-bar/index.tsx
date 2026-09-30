@@ -72,11 +72,8 @@ import {
   useQuery,
   useSubscription,
 } from '@apollo/client';
-import { RIDER_UPDATED_SUBSCRIPTION } from '@/lib/api/graphql/subscription/rider-subscription';
-import {
-  GET_WEB_NOTIFICATIONS,
-  MARK_WEB_NOTIFICATIONS_AS_READ,
-} from '@/lib/api/graphql';
+
+
 import ThemeToggle from '@/lib/ui/useable-components/theme-button';
 import { clearStoredSessionState } from '@/lib/utils/methods/auth';
 import { clearMetricsData } from '@/lib/utils/methods/security';

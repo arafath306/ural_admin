@@ -15,7 +15,7 @@ import { ToastContext } from '@/lib/context/global/toast.context';
 import { VendorLayoutContext } from './layout-vendor.context';
 
 // GraphQL
-import { GET_VENDOR_BY_ID } from '@/lib/api/graphql';
+
 import { useQueryGQL } from '../../hooks/useQueryQL';
 
 export const ProfileContext = createContext<IVendorProfileContextData>(

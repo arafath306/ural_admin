@@ -1,9 +1,6 @@
-import {
-  GET_DASHBOARD_ORDERS_BY_TYPE,
-  GET_DASHBOARD_SALES_BY_TYPE,
-} from '@/lib/api/graphql/queries/dashboard';
+
 import { useConfiguration } from '@/lib/hooks/useConfiguration';
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
 import DashboardStatsTable from '@/lib/ui/useable-components/dashboard-stats-table';
 import {
   IDashboardOrdersByTypeResponseGraphQL,
@@ -16,13 +13,7 @@ export default function StatesTable() {
   // COntext
   const { CURRENCY_CODE } = useConfiguration();
 
-  const { data, loading } = useQueryGQL(GET_DASHBOARD_ORDERS_BY_TYPE, {
-    fetchPolicy: 'cache-and-network',
-    debounceMs: 300,
-  }) as IQueryResult<
-    IDashboardOrdersByTypeResponseGraphQL | undefined,
-    undefined
-  >;
+  const { data, loading, refetch } = { data: null, loading: false, refetch: () => {} };
 
   const { data: salesData, loading: salesLoading } = useQueryGQL(
     GET_DASHBOARD_SALES_BY_TYPE,

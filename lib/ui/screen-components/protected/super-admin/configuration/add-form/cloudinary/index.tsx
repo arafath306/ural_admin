@@ -19,11 +19,8 @@ import { ICloudinaryForm } from '@/lib/utils/interfaces/configurations.interface
 import { CloudinaryValidationSchema } from '@/lib/utils/schema';
 
 // GraphQL
-import {
-  GET_CONFIGURATION,
-  SAVE_CLOUDINARY_CONFIGURATION,
-} from '@/lib/api/graphql';
-import { useMutation } from '@apollo/client';
+
+
 
 const CloudinaryAddForm = () => {
   const { showToast } = useToast();

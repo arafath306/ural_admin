@@ -1,7 +1,6 @@
 'use client';
 
 // Core
-import { ApolloProvider } from '@apollo/client';
 
 // Prime React
 import { PrimeReactProvider } from 'primereact/api';
@@ -26,7 +25,6 @@ import 'primeicons/primeicons.css';
 import './global.css';
 
 // Apollo
-import { useSetupApollo } from '@/lib/hooks/useSetApollo';
 
 export default function RootLayout({
   children,
@@ -34,8 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   // Apollo
-  const client = useSetupApollo();
-
+  
   // Constants
   const value = {
     ripple: true,
@@ -49,8 +46,7 @@ export default function RootLayout({
       </head>
       <body className={'flex flex-col flex-wrap'}>
         <PrimeReactProvider value={value}>
-          <ApolloProvider client={client}>
-            <ConfigurationProvider>
+                      <ConfigurationProvider>
               <LayoutProvider>
                 <UserProvider>
                   <SidebarProvider>
@@ -59,8 +55,7 @@ export default function RootLayout({
                 </UserProvider>
               </LayoutProvider>
             </ConfigurationProvider>
-          </ApolloProvider>
-        </PrimeReactProvider>
+                  </PrimeReactProvider>
       </body>
     </html>
   );

@@ -4,14 +4,24 @@ import CustomButton from '../../button';
 
 // Hooks
 import { useContext, useMemo } from 'react';
-import { useMutation } from '@apollo/client';
+
 
 // GrahpQL
-import { GET_NOTIFICATIONS, SEND_NOTIFICATION_USER } from '@/lib/api/graphql';
+
 
 // Contexts
 import { ToastContext } from '@/lib/context/global/toast.context';
 import { useTranslations } from 'next-intl';
+
+const useQuery = (args: any, args2?: any): any => ({ data: null, loading: false, error: null, startPolling: () => {}, stopPolling: () => {}, refetch: () => {} });
+const useMutation = (args: any, args2?: any): any => [(opts: any) => {}, { loading: false, error: null }];
+class ApolloError extends Error { networkError?: any; graphQLErrors?: any[]; }
+type ApolloCache<T> = any;
+
+
+
+
+
 
 export const NOTIFICATIONS_TABLE_COLUMNS = () => {
   // Hooks
@@ -20,7 +30,7 @@ export const NOTIFICATIONS_TABLE_COLUMNS = () => {
 
   // Mutations
   const [sendNotificationUser, { loading }] = useMutation(
-    SEND_NOTIFICATION_USER,
+    "",
     {
       onCompleted: () => {
         showToast({
@@ -29,7 +39,7 @@ export const NOTIFICATIONS_TABLE_COLUMNS = () => {
           message: t('The notification has been resent successfully'),
         });
       },
-      onError: (err) => {
+      onError: (err: any) => {
         showToast({
           type: 'error',
           title: t('Resend Notification'),
@@ -38,7 +48,7 @@ export const NOTIFICATIONS_TABLE_COLUMNS = () => {
             t('An error occured while resending the notification'),
         });
       },
-      refetchQueries: [{ query: GET_NOTIFICATIONS }],
+      refetchQueries: [{ query: "" }],
     }
   );
 

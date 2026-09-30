@@ -12,14 +12,10 @@ import CustomDropdownComponent from '@/lib/ui/useable-components/custom-dropdown
 import { ToastContext } from '@/lib/context/global/toast.context';
 
 // Hooks
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
 
 // API
-import {
-  DUPLICATE_RESTAURANT,
-  GET_CLONED_RESTAURANTS,
-  GET_VENDORS,
-} from '@/lib/api/graphql';
+
 
 // Interface and Types
 import {

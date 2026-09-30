@@ -19,11 +19,8 @@ import { IPaypalForm } from '@/lib/utils/interfaces/configurations.interface';
 import { PayPalValidationSchema } from '@/lib/utils/schema';
 
 // GraphQL
-import {
-  GET_CONFIGURATION,
-  SAVE_PAYPAL_CONFIGURATION,
-} from '@/lib/api/graphql';
-import { useMutation } from '@apollo/client';
+
+
 
 const PayPalAddForm = () => {
   // Hooks

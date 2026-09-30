@@ -4,12 +4,9 @@ import { Sidebar } from 'primereact/sidebar';
 import { Form, Formik } from 'formik';
 import { ToastContext } from '@/lib/context/global/toast.context';
 import { IWithDrawRequest } from '@/lib/utils/interfaces';
-import { useMutation } from '@apollo/client';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  UPDATE_WITHDRAW_REQUEST,
-  GET_ALL_WITHDRAW_REQUESTS,
-} from '@/lib/api/graphql';
+
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 
 interface IWithdrawRequestFormProps {

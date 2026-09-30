@@ -19,12 +19,12 @@ import useDebounce from '@/lib/hooks/useDebounce';
 import { IActionMenuItem } from '@/lib/utils/interfaces/action-menu.interface';
 
 // GraphQL
-import { GET_STAFFS_PAGINATED } from '@/lib/api/graphql/queries/staff';
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
+
 import CustomDialog from '@/lib/ui/useable-components/delete-dialog';
 import useToast from '@/lib/hooks/useToast';
-import { useMutation } from '@apollo/client';
-import { DELETE_STAFF } from '@/lib/api/graphql/mutations/staff';
+
+
 import { useTranslations } from 'next-intl';
 
 export default function StaffMain({
@@ -46,13 +46,7 @@ export default function StaffMain({
   const debouncedSearch = useDebounce(globalFilterValue, 500);
 
   // Query
-  const { data, loading } = useQueryGQL(GET_STAFFS_PAGINATED, {
-    page: currentPage,
-    limit: rowsPerPage,
-    search: debouncedSearch || undefined,
-  }, {
-    fetchPolicy: 'network-only',
-  }) as IQueryResult<IStaffPaginatedGQLResponse | undefined, undefined>;
+  const { data, loading, refetch } = { data: null, loading: false, refetch: () => {} };
 
   // For global search
   const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {

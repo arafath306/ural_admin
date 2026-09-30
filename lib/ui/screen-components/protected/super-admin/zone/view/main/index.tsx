@@ -1,5 +1,5 @@
 // Core
-import { useMutation } from '@apollo/client';
+
 import { useEffect, useState } from 'react';
 
 // Interface and Types
@@ -24,12 +24,12 @@ import RidersTableHeader from '../header/table-header';
 import { ZONE_TABLE_COLUMNS } from '@/lib/ui/useable-components/table/columns/zone-columns';
 
 // Hooks
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
 import useToast from '@/lib/hooks/useToast';
 import useDebounce from '@/lib/hooks/useDebounce';
 
 // GraphQL and Utilities
-import { DELETE_ZONE, GET_ZONES_PAGINATED } from '@/lib/api/graphql';
+
 
 // Data
 import { useTranslations } from 'next-intl';
@@ -51,13 +51,7 @@ export default function ZoneMain({
   const debouncedSearch = useDebounce(globalFilterValue, 500);
 
   // Query
-  const { data, loading } = useQueryGQL(GET_ZONES_PAGINATED, {
-    page: currentPage,
-    limit: rowsPerPage,
-    search: debouncedSearch || undefined,
-  }, {
-    fetchPolicy: 'network-only',
-  }) as IQueryResult<IZonesPaginatedResponse | undefined, undefined>;
+  const { data, loading, refetch } = { data: null, loading: false, refetch: () => {} };
 
   //Mutation
   const [mutateDelete, { loading: mutationLoading }] = useMutation(

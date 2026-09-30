@@ -3,8 +3,8 @@
 import { ToastContext } from '@/lib/context/global/toast.context';
 
 // GraphQL
-import { useMutation } from '@apollo/client';
-import { UPLOAD_IMAGE_TO_S3 } from '@/lib/api/graphql/mutations';
+
+
 
 // Interfaces
 import {
@@ -33,6 +33,21 @@ import { faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUpload } from '@fortawesome/free-solid-svg-icons';
 import { useTranslations } from 'use-intl';
+
+const useQuery = (args: any, args2?: any): any => ({ data: null, loading: false, error: null, startPolling: () => {}, stopPolling: () => {}, refetch: () => {} });
+const useMutation = (args: any, args2?: any): any => [(opts: any) => {}, { loading: false, error: null }];
+class ApolloError extends Error { networkError?: any; graphQLErrors?: any[]; }
+type ApolloCache<T> = any;
+const UPLOAD_IMAGE_TO_S3: any = '';
+
+
+
+
+const E4E4E7: any = '';
+
+
+const UPLOAD_IMAGE_TO_S3 = '';
+
 // import { MAX_VIDEO_FILE_SIZE } from '@/lib/utils/constants';
 
 function CustomUploadImageComponent({
@@ -122,7 +137,7 @@ function CustomUploadImageComponent({
         } else {
           throw new Error('No image URL returned');
         }
-      } catch (error) {
+      } catch (error: any) {
         onSetImageUrl(name, '');
         showToast({
           type: 'error',

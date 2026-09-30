@@ -19,11 +19,8 @@ import { IGoogleClientForm } from '@/lib/utils/interfaces/configurations.interfa
 import { GoogleClientValidationSchema } from '@/lib/utils/schema';
 
 // GraphQL
-import {
-  GET_CONFIGURATION,
-  SAVE_GOOGLE_CLIENT_ID_CONFIGURATION,
-} from '@/lib/api/graphql';
-import { useMutation } from '@apollo/client';
+
+
 
 const GoogleClientAddForm = () => {
   const {

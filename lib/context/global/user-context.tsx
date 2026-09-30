@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { useApolloClient } from '@apollo/client';
-import { OWNER_SESSION } from '@/lib/api/graphql';
+
 import { ILoginResponse, IOwnerSessionDataResponse } from '@/lib/utils/interfaces';
 import {
   clearStoredSessionState,

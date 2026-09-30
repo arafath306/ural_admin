@@ -32,9 +32,9 @@ import { TimingSchema } from '@/lib/utils/schema/timing';
 import useToast from '@/lib/hooks/useToast';
 
 // GraphQL
-import { GET_RESTAURANT_PROFILE } from '@/lib/api/graphql';
-import { UPDATE_TIMINGS } from '@/lib/api/graphql/mutations/timing';
-import { useMutation, useQuery } from '@apollo/client';
+
+
+
 import { useTranslations } from 'next-intl';
 
 const RestaurantTiming = ({
@@ -58,9 +58,7 @@ const RestaurantTiming = ({
   // Hooks
   const { showToast } = useToast();
 
-  const { data, loading } = useQuery(GET_RESTAURANT_PROFILE, {
-    variables: { id: restaurantId },
-  });
+  const { data, loading, refetch } = { data: null, loading: false, refetch: () => {} };
 
   //for conversion from ["HH","MM"] to 'HH:MM' format
   const openingTimes: ITimingForm[] =

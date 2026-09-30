@@ -4,14 +4,9 @@ import { Button } from 'primereact/button';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { IUserResponse } from '@/lib/utils/interfaces';
 import { CustomDialog } from '@/lib/ui/useable-components/custom-dialog';
-import { useMutation } from '@apollo/client';
+
 import { useTranslations } from 'next-intl';
-import {
-  UPDATE_USER_STATUS,
-  UPDATE_USER_NOTES,
-  DELETE_USER,
-  RESET_USER_SESSION,
-} from '@/lib/api/graphql/mutations/user';
+
 import useToast from '@/lib/hooks/useToast';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';

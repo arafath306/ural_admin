@@ -25,7 +25,7 @@ import CustomUploadImageComponent from '@/lib/ui/useable-components/upload/uploa
 import { VendorEditSchema } from '@/lib/utils/schema';
 
 // GraphQL
-import { EDIT_VENDOR } from '@/lib/api/graphql';
+
 
 // Icons
 import CustomPhoneTextField from '@/lib/ui/useable-components/phone-input-field';

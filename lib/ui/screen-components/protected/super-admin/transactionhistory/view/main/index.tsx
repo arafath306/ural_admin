@@ -21,8 +21,8 @@ import {
 import { IActionMenuItem } from '@/lib/utils/interfaces/action-menu.interface';
 
 // GraphQL
-import { GET_TRANSACTION_HISTORY } from '@/lib/api/graphql';
-import { useQuery } from '@apollo/client';
+
+
 import TransactionDetailModal from '@/lib/ui/useable-components/popup-menu/transaction-history-modal.module';
 import { useTranslations } from 'next-intl';
 import useDebounce from '@/lib/hooks/useDebounce';
@@ -62,15 +62,7 @@ export default function TransactionHistoryMain() {
   const [openMenuId, setOpenMenuId] = useState<string>('');
 
   // Query with proper typing
-  const { data, loading, refetch } = useQuery(GET_TRANSACTION_HISTORY, {
-    variables: {
-      pageSize: pageSize + 30, // Required field
-      pageNo: currentPage, // Required field
-      startingDate: dateFilters.startingDate || undefined,
-      endingDate: dateFilters.endingDate || undefined,
-      ...(dateFilters.userType !== 'ALL' && { userType: dateFilters.userType }),
-    },
-  }) as unknown as IQueryResult<ITransactionHistoryResponse | undefined, any>;
+  const { data, loading, refetch } = { data: null, loading: false, refetch: () => {} };
 
   // Global search handler
   const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {

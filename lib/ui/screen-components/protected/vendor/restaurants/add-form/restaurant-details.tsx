@@ -45,18 +45,14 @@ import { useShopTypes } from '@/lib/hooks/useShopType';
 
 // Schemas and GraphQL
 import { RestaurantSchema } from '@/lib/utils/schema/restaurant';
-import {
-  CREATE_RESTAURANT,
-  GET_CUISINES,
-  GET_RESTAURANTS_BY_OWNER,
-} from '@/lib/api/graphql';
+
 
 // Contexts
 import { ToastContext } from '@/lib/context/global/toast.context';
 import { VendorLayoutRestaurantContext } from '@/lib/context/vendor/restaurant.context';
 
 // Hooks
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
 import { useTranslations } from 'next-intl';
 import CustomPhoneTextField from '@/lib/ui/useable-components/phone-input-field';
 

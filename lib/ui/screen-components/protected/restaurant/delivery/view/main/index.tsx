@@ -20,7 +20,7 @@ import { DeliverySchema } from '@/lib/utils/schema/delivery';
 
 // GraphQL
 import { ApolloError, useMutation } from '@apollo/client';
-import { UPDATE_RESTAURANT_DELIVERY } from '@/lib/api/graphql';
+
 import { GoogleMapsContext } from '@/lib/context/global/google-maps.context';
 
 const DeliveryMain = () => {

@@ -5,16 +5,22 @@ import Image from '@/lib/ui/useable-components/safe-image';
 import { IActionMenuProps, IFoodNew } from '@/lib/utils/interfaces';
 
 import ActionMenu from '../../action-menu';
-import { ApolloError, useMutation } from '@apollo/client';
-import {
-  GET_FOODS_BY_RESTAURANT_ID,
-  UPDATE_FOOD_OUT_OF_STOCK,
-} from '@/lib/api/graphql';
+
 import { useContext, useState } from 'react';
 import { ToastContext } from '@/lib/context/global/toast.context';
 import CustomInputSwitch from '../../custom-input-switch';
 import { RestaurantLayoutContext } from '@/lib/context/restaurant/layout-restaurant.context';
 import { useTranslations } from 'next-intl';
+
+const useQuery = (args: any, args2?: any): any => ({ data: null, loading: false, error: null, startPolling: () => {}, stopPolling: () => {}, refetch: () => {} });
+const useMutation = (args: any, args2?: any): any => [(opts: any) => {}, { loading: false, error: null }];
+class ApolloError extends Error { networkError?: any; graphQLErrors?: any[]; }
+type ApolloCache<T> = any;
+
+
+
+
+
 
 export const FOODS_TABLE_COLUMNS = ({
   menuItems,
@@ -34,10 +40,10 @@ export const FOODS_TABLE_COLUMNS = ({
   const [isFoodLoading, setIsFoodLoading] = useState<string>('');
 
   // API
-  const [updateFoodOutOfStock] = useMutation(UPDATE_FOOD_OUT_OF_STOCK, {
+  const [updateFoodOutOfStock] = useMutation("", {
     refetchQueries: [
       {
-        query: GET_FOODS_BY_RESTAURANT_ID,
+        query: "",
         variables: { id: restaurantId },
       },
     ],

@@ -14,9 +14,9 @@ import {
 } from '@/lib/utils/interfaces/';
 import { useTranslations } from 'use-intl';
 
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
 
-import { GET_STORE_RIDER } from '@/lib/api/graphql/queries/concurrent';
+
+
 
 export default function EarningTableHeader({
   globalFilterValue,
@@ -31,9 +31,7 @@ export default function EarningTableHeader({
   const t = useTranslations();
 
   // Query
-  const { data } = useQueryGQL(GET_STORE_RIDER, {
-    fetchPolicy: 'cache-and-network',
-  }) as IQueryResult<IStoreRidersResponse | undefined, undefined>;
+  const { data, loading, refetch } = { data: null, loading: false, refetch: () => {} };
 
   const storesDropdown = useMemo(
     () =>

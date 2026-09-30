@@ -24,11 +24,8 @@ import { DeliverytRateValidationSchema } from '@/lib/utils/schema';
 import { adminConfigService } from '@/lib/supabase/services/adminConfigService';
 
 // GraphQL
-import {
-  GET_CONFIGURATION,
-  SAVE_DELIVERY_RATE_CONFIGURATION,
-} from '@/lib/api/graphql';
-import { useMutation } from '@apollo/client';
+
+
 
 const COST_TYPES = [
   { label: 'Fixed Rate', code: 'fixed' },
@@ -45,12 +42,7 @@ const DeliveryRateAddForm = () => {
     costType: COST_TYPE || 'fixed',
   };
 
-  const [mutate] = useMutation(
-    SAVE_DELIVERY_RATE_CONFIGURATION,
-    {
-      refetchQueries: [{ query: GET_CONFIGURATION }],
-    }
-  );
+  const [mutate] = [() => {}];
 
   const handleSubmit = async (values: IDeliveryRateForm) => {
     const rate = Number(values.deliveryRate ?? 50);

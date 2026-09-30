@@ -1,4 +1,4 @@
-import { Libraries } from '@/lib/ui/useable-components/osm-map';
+type Libraries = any;
 import { ReactNode } from 'react';
 import { IGlobalComponentProps } from './global.interface';
 

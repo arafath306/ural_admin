@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { GET_RESTAURANT_PROFILE } from '@/lib/api/graphql';
+
 import { RestaurantLayoutContext } from '@/lib/context/restaurant/layout-restaurant.context';
 import { useQueryGQL } from '../../hooks/useQueryQL';
 import {

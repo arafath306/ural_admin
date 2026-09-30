@@ -6,6 +6,16 @@ import ActionMenu from '@/lib/ui/useable-components/action-menu';
 import { IActionMenuProps } from '@/lib/utils/interfaces/action-menu.interface';
 import { IBannersResponse } from '@/lib/utils/interfaces/banner.interface';
 import { useTranslations } from 'next-intl';
+
+const useQuery = (args: any, args2?: any): any => ({ data: null, loading: false, error: null, startPolling: () => {}, stopPolling: () => {}, refetch: () => {} });
+const useMutation = (args: any, args2?: any): any => [(opts: any) => {}, { loading: false, error: null }];
+class ApolloError extends Error { networkError?: any; graphQLErrors?: any[]; }
+type ApolloCache<T> = any;
+
+
+
+
+
 // Interfaces and Types
 export const BANNERS_TABLE_COLUMNS = ({
   menuItems,

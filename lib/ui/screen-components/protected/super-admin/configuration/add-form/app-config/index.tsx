@@ -2,7 +2,7 @@
 // Core
 import React, { useMemo } from 'react';
 import { Form, Formik } from 'formik';
-import { useMutation, useQuery } from '@apollo/client';
+
 
 // Components
 import ConfigCard from '../../view/card';
@@ -24,11 +24,7 @@ import { IDropdownSelectItem } from '@/lib/utils/interfaces';
 import { AppConfigValidationSchema } from '@/lib/utils/schema';
 
 // GraphQL
-import {
-  GET_CONFIGURATION,
-  GET_ZONES,
-  SAVE_APP_CONFIGURATION,
-} from '@/lib/api/graphql';
+
 
 const AppConfigAddForm = () => {
   // Hooks

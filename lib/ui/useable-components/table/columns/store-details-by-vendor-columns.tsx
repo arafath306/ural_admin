@@ -2,6 +2,16 @@
 import { IVendorStoreDetails } from '@/lib/utils/interfaces';
 import { useTranslations } from 'next-intl';
 
+const useQuery = (args: any, args2?: any): any => ({ data: null, loading: false, error: null, startPolling: () => {}, stopPolling: () => {}, refetch: () => {} });
+const useMutation = (args: any, args2?: any): any => [(opts: any) => {}, { loading: false, error: null }];
+class ApolloError extends Error { networkError?: any; graphQLErrors?: any[]; }
+type ApolloCache<T> = any;
+
+
+
+
+
+
 export const VENDOR_STORE_DETAILS_COLUMN = () => {
   // Hooks
   const t = useTranslations();

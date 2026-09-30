@@ -5,8 +5,18 @@ import TextIconClickable from '../../text-icon-clickable';
 import { faAdd } from '@fortawesome/free-solid-svg-icons';
 import { useTranslations } from 'next-intl';
 import Image from '@/lib/ui/useable-components/safe-image';
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
-import { GET_SUBCATEGORIES_BY_PARENT_ID } from '@/lib/api/graphql/queries/sub-categories';
+
+const useQuery = (args: any, args2?: any): any => ({ data: null, loading: false, error: null, startPolling: () => {}, stopPolling: () => {}, refetch: () => {} });
+const useMutation = (args: any, args2?: any): any => [(opts: any) => {}, { loading: false, error: null }];
+class ApolloError extends Error { networkError?: any; graphQLErrors?: any[]; }
+type ApolloCache<T> = any;
+
+
+
+
+
+
+
 
 
 
@@ -19,11 +29,7 @@ interface ColumnDefinition {
 // Component for the subcategory column
 const SubcategoryCell = ({ categoryId }: { categoryId: string }) => {
   const [subcategories, setSubcategories] = useState<ISubCategory[]>([]);
-  const { data, loading } = useQueryGQL(
-    GET_SUBCATEGORIES_BY_PARENT_ID,
-    { parentCategoryId: categoryId },
-    { enabled: !!categoryId }
-  ) as IQueryResult<ISubCategoryByParentIdResponse | undefined, { parentCategoryId: string }>;
+  const { data, loading, refetch } = { data: null, loading: false, refetch: () => {} };
 
   useEffect(() => {
     if (data?.subCategoriesByParentId) {

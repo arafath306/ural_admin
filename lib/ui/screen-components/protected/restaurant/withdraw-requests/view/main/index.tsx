@@ -9,8 +9,8 @@ import Table from '@/lib/ui/useable-components/table';
 import { WITHDRAW_REQUESTS_ADMIN_TABLE_COLUMNS } from '@/lib/ui/useable-components/table/columns/withdraw-request-admin-columns';
 
 // GraphQL
-import { GET_ALL_WITHDRAW_REQUESTS } from '@/lib/api/graphql';
-import { useQuery } from '@apollo/client';
+
+
 
 // Context
 import { RestaurantLayoutContext } from '@/lib/context/restaurant/layout-restaurant.context'; // Add this import
@@ -51,18 +51,7 @@ export default function WithdrawRequestsAdminMain() {
     ['REQUESTED', 'TRANSFERRED', 'CANCELLED'].includes(action)
   );
   // Query with proper typing and hardcoded STORE userType
-  const { data, loading } = useQuery(GET_ALL_WITHDRAW_REQUESTS, {
-    variables: {
-      pageSize: pageSize,
-      pageNo: currentPage,
-      userType: UserTypeEnum.STORE, // Hardcoded to STORE
-      userId: restaurantId, // Added restaurantId
-    },
-    fetchPolicy: 'cache-and-network',
-  }) as unknown as IQueryResult<
-    IGetWithDrawRequestsData | undefined,
-    undefined
-  >;
+  const { data, loading, refetch } = { data: null, loading: false, refetch: () => {} };
 
   
 

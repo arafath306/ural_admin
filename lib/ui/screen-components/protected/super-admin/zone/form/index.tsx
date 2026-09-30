@@ -23,8 +23,8 @@ import { ZoneSchema } from '@/lib/utils/schema';
 import useToast from '@/lib/hooks/useToast';
 
 //GraphQL
-import { CREATE_ZONE, EDIT_ZONE, GET_ZONES } from '@/lib/api/graphql';
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
+
 import { ApolloError, useMutation } from '@apollo/client';
 import { IZoneForm } from '@/lib/utils/interfaces/forms/zone.form.interface';
 import CustomTextAreaField from '@/lib/ui/useable-components/custom-text-area-field';
@@ -58,9 +58,7 @@ export default function ZoneAddForm({
   const { isLoaded } = useContext(GoogleMapsContext);
 
   // Query
-  const { data } = useQueryGQL(GET_ZONES, {
-    fetchPolicy: 'cache-and-network',
-  }) as IQueryResult<IRiderZonesResponse | undefined, undefined>;
+  const { data, loading, refetch } = { data: null, loading: false, refetch: () => {} };
 
   // Mutation
   const [createZone, { loading: mutationLoading }] = useMutation(

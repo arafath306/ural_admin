@@ -3,11 +3,9 @@ import React, { useContext, useMemo } from 'react';
 import { Divider } from 'primereact/divider';
 
 // API and context imports
-import {
-  GET_RESTAURANT_DASHBOARD_ORDER_SALES_DETAILS_BY_PAYMENT_METHOD,
-} from '@/lib/api/graphql/queries/dashboard';
+
 import { RestaurantLayoutContext } from '@/lib/context/restaurant/layout-restaurant.context';
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
 import {
   IDashboardOrderSalesDetailsByPaymentMethodResponseGraphQL,
   IDashboardRestaurantStatesTableComponentsProps,

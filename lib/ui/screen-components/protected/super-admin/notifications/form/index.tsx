@@ -1,5 +1,5 @@
 // GraphQL
-import { SEND_NOTIFICATION_USER } from '@/lib/api/graphql';
+
 
 // Contexts
 import { ToastContext } from '@/lib/context/global/toast.context';
@@ -14,7 +14,7 @@ import { NotificationErrors } from '@/lib/utils/constants';
 import { INotificationFormProps } from '@/lib/utils/interfaces/notification.interface';
 import { onErrorMessageMatcher } from '@/lib/utils/methods';
 import { NotificationSchema } from '@/lib/utils/schema/notification';
-import { useMutation } from '@apollo/client';
+
 import { Form, Formik } from 'formik';
 import { useTranslations } from 'next-intl';
 import { Sidebar } from 'primereact/sidebar';

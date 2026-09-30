@@ -13,8 +13,8 @@ import {
   IRestaurantsByOwnerResponseGraphQL,
   IVendorLayoutRestaurantContextData,
 } from '@/lib/utils/interfaces';
-import { GET_RESTAURANTS_BY_OWNER } from '@/lib/api/graphql';
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
+
 import { onFilterObjects } from '@/lib/utils/methods';
 import { VendorLayoutContext } from './layout-vendor.context';
 

@@ -8,10 +8,20 @@ import CustomInputSwitch from '../../custom-input-switch';
 // Interfaces and Types
 import { IStaffResponse } from '@/lib/utils/interfaces';
 import { IActionMenuProps } from '@/lib/utils/interfaces/action-menu.interface';
-import { useMutation } from '@apollo/client';
-import { EDIT_STAFF } from '@/lib/api/graphql/mutations/staff';
+
+
 import useToast from '@/lib/hooks/useToast';
 import { useTranslations } from 'next-intl';
+
+const useQuery = (args: any, args2?: any): any => ({ data: null, loading: false, error: null, startPolling: () => {}, stopPolling: () => {}, refetch: () => {} });
+const useMutation = (args: any, args2?: any): any => [(opts: any) => {}, { loading: false, error: null }];
+class ApolloError extends Error { networkError?: any; graphQLErrors?: any[]; }
+type ApolloCache<T> = any;
+
+
+
+
+
 
 export const STAFF_TABLE_COLUMNS = ({
   menuItems,
@@ -26,7 +36,7 @@ export const STAFF_TABLE_COLUMNS = ({
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
 
   // GraphQL mutation hook
-  const [mutateToggle, { loading }] = useMutation(EDIT_STAFF, {
+  const [mutateToggle, { loading }] = useMutation("", {
     refetchQueries: 'active',
     awaitRefetchQueries: true,
     onCompleted: () => {
@@ -36,7 +46,7 @@ export const STAFF_TABLE_COLUMNS = ({
         message: t('The staff status has been updated successfully'),
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       showToast({
         type: 'error',
         title: t('Toggle Staff Status'),

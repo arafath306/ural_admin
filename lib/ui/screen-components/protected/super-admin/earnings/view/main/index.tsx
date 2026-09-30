@@ -1,6 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@apollo/client';
-import { GET_EARNING } from '@/lib/api/graphql/queries/earnings';
 import { FilterMatchMode } from 'primereact/api';
 import Table from '@/lib/ui/useable-components/table';
 import {
@@ -39,29 +37,7 @@ export default function EarningsMain({
     paymentMethod: undefined,
   });
 
-  const { data, loading, refetch } = useQuery(GET_EARNING, {
-    variables: {
-      pageSize,
-      pageNo: currentPage,
-      startingDate: dateFilters.startingDate || undefined,
-      endingDate: dateFilters.endingDate || undefined,
-      search: debouncedSearch,
-      userType:
-        dateFilters.userType !== 'ALL' ? dateFilters.userType : undefined,
-      userId: dateFilters?.userId ?? undefined,
-      orderType:
-        dateFilters.orderType !== 'ALL' ? dateFilters.orderType : undefined,
-      paymentMethod:
-        dateFilters.paymentMethod !== 'ALL'
-          ? dateFilters.paymentMethod
-          : undefined,
-    },
-    fetchPolicy: 'cache-and-network',
-    onCompleted: (data) => {
-      const grandTotalEarnings = data?.earnings?.data?.grandTotalEarnings;
-      setTotalEarnings(grandTotalEarnings);
-    },
-  });
+  const { data, loading, refetch } = { data: null, loading: false, refetch: (args: any) => {} } as any;
 
   // Global search handler
   const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {

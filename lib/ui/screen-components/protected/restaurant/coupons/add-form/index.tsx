@@ -25,11 +25,8 @@ import { CouponRestaurantFormSchema } from '@/lib/utils/schema';
 import useToast from '@/lib/hooks/useToast';
 
 //GraphQL
-import { useMutation } from '@apollo/client';
-import {
-  CREATE_RESTAURANT_COUPON,
-  EDIT_RESTAURANT_COUPON,
-} from '@/lib/api/graphql/mutations/coupons-restaurant';
+
+
 import { useTranslations } from 'next-intl';
 
 export default function CouponsAddForm({

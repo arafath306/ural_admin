@@ -49,14 +49,9 @@ import {
 import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
 
 // Schemas
-import {
-  CREATE_RESTAURANT,
-  GET_CUISINES,
-  GET_RESTAURANTS,
-  GET_RESTAURANTS_BY_OWNER,
-} from '@/lib/api/graphql';
+
 import { ToastContext } from '@/lib/context/global/toast.context';
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
 import { toTextCase } from '@/lib/utils/methods';
 import { RestaurantSchema } from '@/lib/utils/schema/restaurant';
 import {

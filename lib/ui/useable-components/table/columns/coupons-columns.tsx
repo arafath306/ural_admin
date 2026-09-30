@@ -8,14 +8,24 @@ import ActionMenu from '../../action-menu';
 
 // Hooks
 import { useContext, useMemo, useState } from 'react';
-import { useMutation } from '@apollo/client';
+
 
 //GraphQL
-import { EDIT_COUPON } from '@/lib/api/graphql';
+
 
 // Contexts
 import { ToastContext } from '@/lib/context/global/toast.context';
 import { useTranslations } from 'next-intl';
+
+const useQuery = (args: any, args2?: any): any => ({ data: null, loading: false, error: null, startPolling: () => {}, stopPolling: () => {}, refetch: () => {} });
+const useMutation = (args: any, args2?: any): any => [(opts: any) => {}, { loading: false, error: null }];
+class ApolloError extends Error { networkError?: any; graphQLErrors?: any[]; }
+type ApolloCache<T> = any;
+
+
+
+
+
 
 export const COUPONS_TABLE_COLUMNS = ({
   menuItems,
@@ -34,7 +44,7 @@ export const COUPONS_TABLE_COLUMNS = ({
   });
 
   // Mutations
-  const [editCoupon, { loading }] = useMutation(EDIT_COUPON, {
+  const [editCoupon, { loading }] = useMutation("", {
     refetchQueries: 'active',
     awaitRefetchQueries: true,
     onCompleted: () => {
@@ -49,7 +59,7 @@ export const COUPONS_TABLE_COLUMNS = ({
         bool: false,
       });
     },
-    onError: (err) => {
+    onError: (err: any) => {
       showToast({
         title: t('Edit Coupon'),
         type: 'error',

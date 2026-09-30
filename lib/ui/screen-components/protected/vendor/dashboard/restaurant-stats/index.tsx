@@ -1,10 +1,10 @@
 import { useContext, useMemo } from 'react';
 // Component
-import { GET_VENDOR_DASHBOARD_STATS_CARD_DETAILS } from '@/lib/api/graphql/queries/dashboard';
+
 import StatsCard from '@/lib/ui/useable-components/stats-card';
 
 // Hooks
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
 import { useConfiguration } from '@/lib/hooks/useConfiguration';
 
 // Interface & Types
@@ -37,22 +37,7 @@ export default function RestaurantStats({
   } = useContext(VendorLayoutContext);
   const { CURRENCY_CODE } = useConfiguration();
 
-  const { data, loading } = useQueryGQL(
-    GET_VENDOR_DASHBOARD_STATS_CARD_DETAILS,
-    {
-      vendorId,
-      dateKeyword: dateFilter.dateKeyword,
-      starting_date: dateFilter?.startDate,
-      ending_date: dateFilter?.endDate,
-    },
-    {
-      fetchPolicy: 'cache-and-network',
-      debounceMs: 300,
-    }
-  ) as IQueryResult<
-    IVendorDashboardStatsCardDetailsResponseGraphQL | undefined,
-    undefined
-  >;
+  const { data, loading, refetch } = { data: null, loading: false, refetch: () => {} };
 
   const dashboardStats = useMemo(() => {
     if (!data) return null;

@@ -15,6 +15,16 @@ import { ToastContext } from '@/lib/context/global/toast.context';
 import { useTranslations } from 'next-intl';
 import { toTextCase } from '@/lib/utils/methods';
 
+const useQuery = (args: any, args2?: any): any => ({ data: null, loading: false, error: null, startPolling: () => {}, stopPolling: () => {}, refetch: () => {} });
+const useMutation = (args: any, args2?: any): any => [(opts: any) => {}, { loading: false, error: null }];
+class ApolloError extends Error { networkError?: any; graphQLErrors?: any[]; }
+type ApolloCache<T> = any;
+
+
+
+
+
+
 export const RIDER_TABLE_COLUMNS = ({
   menuItems,
   onRefresh,
@@ -48,7 +58,7 @@ export const RIDER_TABLE_COLUMNS = ({
       if (onRefresh) {
         onRefresh();
       }
-    } catch (error) {
+    } catch (error: any) {
       showToast({
         type: 'error',
         title: t('Status'),

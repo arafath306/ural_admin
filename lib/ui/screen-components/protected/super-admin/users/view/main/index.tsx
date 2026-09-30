@@ -13,8 +13,8 @@ import {
 import Table from '@/lib/ui/useable-components/table';
 
 // GraphQL
-import { useQuery } from '@apollo/client';
-import { GET_USERS_PAGINATED } from '@/lib/api/graphql/queries/user';
+
+
 import { IDropdownSelectItem } from '@/lib/utils/interfaces';
 import { USERS_TABLE_COLUMNS } from '@/lib/ui/useable-components/table/columns/user-columns';
 import { useRouter } from 'next/navigation';

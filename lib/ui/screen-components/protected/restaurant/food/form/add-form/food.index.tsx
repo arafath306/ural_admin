@@ -9,7 +9,7 @@ import { FoodsContext } from '@/lib/context/restaurant/foods.context';
 import { RestaurantLayoutContext } from '@/lib/context/restaurant/layout-restaurant.context';
 
 // Hooks
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
 import { useTranslations } from 'next-intl';
 
 // Interface and Types
@@ -38,8 +38,8 @@ import CustomTextAreaField from '@/lib/ui/useable-components/custom-text-area-fi
 import CustomUploadImageComponent from '@/lib/ui/useable-components/upload/upload-image';
 
 // API
-import { GET_CATEGORY_BY_RESTAURANT_ID } from '@/lib/api/graphql';
-import { GET_SUBCATEGORIES_BY_PARENT_ID } from '@/lib/api/graphql/queries/sub-categories';
+
+
 
 // Schema
 import { FoodSchema } from '@/lib/utils/schema';

@@ -19,11 +19,8 @@ import { IAmplitudeForm } from '@/lib/utils/interfaces/configurations.interface'
 import { AmplitudeValidationSchema } from '@/lib/utils/schema';
 
 // GraphQL
-import {
-  GET_CONFIGURATION,
-  SAVE_AMPLITUDE_API_KEY_CONFIGURATION,
-} from '@/lib/api/graphql';
-import { useMutation } from '@apollo/client';
+
+
 
 const AmplitudeAddForm = () => {
   // Hooks

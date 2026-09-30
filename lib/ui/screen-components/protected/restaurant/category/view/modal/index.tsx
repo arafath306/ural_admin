@@ -1,5 +1,5 @@
 // GraphQL
-import { GET_SUBCATEGORIES_BY_PARENT_ID } from '@/lib/api/graphql/queries/sub-categories';
+
 
 // Components
 import InputSkeleton from '@/lib/ui/useable-components/custom-skeletons/inputfield.skeleton';

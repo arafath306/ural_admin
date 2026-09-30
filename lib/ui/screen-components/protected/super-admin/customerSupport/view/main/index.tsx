@@ -1,14 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { useQuery, useMutation } from '@apollo/client';
-import {
-  GET_TICKET_USERS_WITH_LATEST,
-  GET_USER_SUPPORT_TICKETS,
-} from '@/lib/api/graphql/queries/supportTickets';
-import {
-  CREATE_TICKET_MESSAGE,
-  UPDATE_TICKET_STATUS,
-} from '@/lib/api/graphql/mutations/supportTickets';
+
+
+
 import UserTicketCard from '@/lib/ui/useable-components/user-ticket-card';
 import TicketCard from '@/lib/ui/useable-components/ticket-card';
 import TicketChatModal from '@/lib/ui/useable-components/ticket-chat-modal';

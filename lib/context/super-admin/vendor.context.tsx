@@ -12,10 +12,10 @@ import {
 } from '@/lib/utils/interfaces';
 
 // API
-import { GET_VENDORS } from '@/lib/api/graphql';
+
 
 // Hooks
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
 
 // Methods
 import { onFilterObjects, onUseLocalStorage } from '@/lib/utils/methods';

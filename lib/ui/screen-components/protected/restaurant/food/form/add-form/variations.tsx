@@ -37,19 +37,14 @@ import CustomButton from '@/lib/ui/useable-components/button';
 import { ToastContext } from '@/lib/context/global/toast.context';
 
 // API
-import {
-  CREATE_FOOD,
-  EDIT_FOOD,
-  GET_ADDONS_BY_RESTAURANT_ID,
-  GET_FOODS_BY_RESTAURANT_ID,
-} from '@/lib/api/graphql';
+
 
 // Icons
 import { faAdd, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 // Apollo
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
-import { useMutation } from '@apollo/client';
+
+
 import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 
@@ -102,16 +97,7 @@ export default function VariationAddForm({
   };
 
   // Query
-  const { data, loading } = useQueryGQL(
-    GET_ADDONS_BY_RESTAURANT_ID,
-    { id: restaurantId },
-    {
-      fetchPolicy: 'cache-and-network',
-      enabled: !!restaurantId,
-      onCompleted: onFetchAddonsByRestaurantCompleted,
-      onError: onErrorFetchAddonsByRestaurant,
-    }
-  ) as IQueryResult<IAddonByRestaurantResponse | undefined, undefined>;
+  const { data, loading, refetch } = { data: null, loading: false, refetch: () => {} };
 
   const [createFood] = useMutation(
     foodContextData?.isEditing ? EDIT_FOOD : CREATE_FOOD,

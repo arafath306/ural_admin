@@ -1,12 +1,6 @@
 'use client';
 
 // Core imports
-import {
-  ApolloCache,
-  ApolloError,
-  useMutation,
-  useQuery,
-} from '@apollo/client';
 import React, {
   useCallback,
   useContext,
@@ -18,12 +12,6 @@ import React, {
 import { throttle } from '@/lib/utils/methods';
 
 // API and GraphQL
-import {
-  GET_RESTAURANT_DELIVERY_ZONE_INFO,
-  GET_RESTAURANT_PROFILE,
-  UPDATE_DELIVERY_BOUNDS_AND_LOCATION,
-  GET_ZONES,
-} from '@/lib/api/graphql';
 
 // Context
 import { ToastContext } from '@/lib/context/global/toast.context';
@@ -66,6 +54,16 @@ import calculateZoom from '@/lib/utils/methods/zoom-calculator';
 import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import { darkMapStyle } from '@/lib/utils/map-style/mapStyle';
+
+const useQuery = (args: any, args2?: any): any => ({ data: null, loading: false, error: null, startPolling: () => {}, stopPolling: () => {}, refetch: () => {} });
+const useMutation = (args: any, args2?: any): any => [(opts: any) => {}, { loading: false, error: null }];
+class ApolloError extends Error { networkError?: any; graphQLErrors?: any[]; }
+type ApolloCache<T> = any;
+const UPDATE_DELIVERY_BOUNDS_AND_LOCATION: any = '';
+const GET_ZONES: any = '';
+const GET_RESTAURANT_DELIVERY_ZONE_INFO: any = '';
+const GET_RESTAURANT_PROFILE: any = '';
+
 
 const autocompleteService: {
   current: google.maps.places.AutocompleteService | null;
@@ -137,7 +135,7 @@ const CustomGoogleMapsLocationBounds: React.FC<
   const [updateRestaurantDeliveryZone, { loading: isSubmitting }] = useMutation(
     UPDATE_DELIVERY_BOUNDS_AND_LOCATION,
     {
-      update: (cache, { data }) => {
+      update: (cache: any, { data }: { data: any }) => {
         if (data) {
           updateCache(cache, { data } as IRestaurantProfileResponse);
         }

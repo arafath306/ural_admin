@@ -21,11 +21,8 @@ import { ITwilioForm } from '@/lib/utils/interfaces/configurations.interface';
 import { TwilioValidationSchema } from '@/lib/utils/schema';
 
 // GraphQL
-import {
-  GET_CONFIGURATION,
-  SAVE_TWILIO_CONFIGURATION,
-} from '@/lib/api/graphql';
-import { useMutation } from '@apollo/client';
+
+
 import CustomNumberField from '@/lib/ui/useable-components/number-input-field';
 
 const TwilioAddForm = () => {

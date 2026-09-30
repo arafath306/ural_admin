@@ -17,11 +17,8 @@ import { useState } from 'react';
 import { IVerificationConfigForm } from '@/lib/utils/interfaces/configurations.interface';
 
 // GraphQL
-import {
-  GET_CONFIGURATION,
-  SAVE_VERIFICATION_CONFIGURATION,
-} from '@/lib/api/graphql';
-import { useMutation } from '@apollo/client';
+
+
 import CustomInputSwitch from '@/lib/ui/useable-components/custom-input-switch';
 
 const VerificationAddForm = () => {

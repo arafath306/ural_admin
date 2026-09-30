@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react';
 import { Form, Formik } from 'formik';
-import { useMutation } from '@apollo/client';
+
 import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
 
 import { ProfileContext } from '@/lib/context/restaurant/profile.context';
@@ -23,8 +23,8 @@ import {
   SELECTED_SHOPTYPE,
 } from '@/lib/utils/constants';
 import { RestaurantSchema } from '@/lib/utils/schema/restaurant';
-import { EDIT_RESTAURANT, GET_CUISINES } from '@/lib/api/graphql';
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
+
 import {
   onErrorMessageMatcher,
   onUseLocalStorage,

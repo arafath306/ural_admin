@@ -18,12 +18,7 @@ import React, {
 import { throttle } from '@/lib/utils/methods';
 
 // API and GraphQL
-import {
-  GET_RESTAURANT_DELIVERY_ZONE_INFO,
-  GET_RESTAURANT_PROFILE,
-  GET_ZONES,
-  UPDATE_DELIVERY_BOUNDS_AND_LOCATION,
-} from '@/lib/api/graphql';
+
 
 // Context
 import { ToastContext } from '@/lib/context/global/toast.context';

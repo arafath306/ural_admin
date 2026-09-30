@@ -3,8 +3,8 @@ import { useEffect, useMemo, useState, useContext } from 'react';
 
 // Prime React
 import { Chart } from 'primereact/chart';
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
-import { GET_DASHBOARD_RESTAURANT_SALES_ORDER_COUNT_DETAILS_BY_YEAR } from '@/lib/api/graphql';
+
+
 import {
   IDashboardRestaurantSalesOrderCountDetailsByYearResponseGraphQL,
   IQueryResult,
@@ -29,21 +29,7 @@ export default function GrowthOverView() {
   const [chartOptions, setChartOptions] = useState({});
 
   // Query
-  const { data, loading } = useQueryGQL(
-    GET_DASHBOARD_RESTAURANT_SALES_ORDER_COUNT_DETAILS_BY_YEAR,
-    {
-      restaurant: restaurantId,
-      year: new Date().getFullYear(),
-    },
-    {
-      fetchPolicy: 'cache-and-network',
-      enabled: !!restaurantId,
-      debounceMs: 300,
-    }
-  ) as IQueryResult<
-    IDashboardRestaurantSalesOrderCountDetailsByYearResponseGraphQL | undefined,
-    undefined
-  >;
+  const { data, loading, refetch } = { data: null, loading: false, refetch: () => {} };
 
   const dashboardSalesOrderCountDetailsByYear = useMemo(() => {
     if (!data) return null;

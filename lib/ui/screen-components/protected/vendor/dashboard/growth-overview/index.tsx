@@ -5,11 +5,8 @@ import { useRouter } from 'next/navigation';
 
 // Prime React
 import { Chart } from 'primereact/chart';
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
-import {
-  GET_STORE_DETAILS_BY_VENDOR_ID_PAGINATED,
-  GET_VENDOR_DASHBOARD_GROWTH_DETAILS_BY_YEAR,
-} from '@/lib/api/graphql';
+
+
 import {
   IDashboardGrowthOverviewComponentsProps,
   IDashboardVendorGrowthOverViewTabularComponentsProps,
@@ -44,20 +41,7 @@ const VendorGrowthOverViewGraph = () => {
   const [chartOptions, setChartOptions] = useState({});
 
   // Query
-  const { data, loading } = useQueryGQL(
-    GET_VENDOR_DASHBOARD_GROWTH_DETAILS_BY_YEAR,
-    {
-      vendorId,
-      year: new Date().getFullYear(),
-    },
-    {
-      fetchPolicy: 'network-only',
-      debounceMs: 300,
-    }
-  ) as IQueryResult<
-    IGetVendorDashboardGrowthDetailsByYearResponseGraphQL | undefined,
-    undefined
-  >;
+  const { data, loading, refetch } = { data: null, loading: false, refetch: () => {} };
 
   const dashboardVendorDetailsByYear = useMemo(() => {
     if (!data) return null;
@@ -194,25 +178,7 @@ const VendorGrowthOverViewTabular = ({
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 500);
 
-  const { data, loading } = useQueryGQL(
-    GET_STORE_DETAILS_BY_VENDOR_ID_PAGINATED,
-    {
-      id: vendorId,
-      dateKeyword: dateFilter?.dateKeyword,
-      starting_date: dateFilter?.startDate ?? '',
-      ending_date: dateFilter?.endDate ?? '',
-      page: currentPage,
-      limit: rowsPerPage,
-      search: debouncedSearch || '',
-    },
-    {
-      fetchPolicy: 'network-only',
-      enabled: !!vendorId,
-    }
-  ) as IQueryResult<
-    IVendorStoreDetailsPaginatedResponseGraphQL | undefined,
-    undefined
-  >;
+  const { data, loading, refetch } = { data: null, loading: false, refetch: () => {} };
 
   useEffect(() => {
     setCurrentPage(1);

@@ -1,42 +1,25 @@
-import supabase from '../client';
 
+import { supabase } from '../client';
 export const adminCouponService = {
-  getCoupons: async (page = 1, limit = 10, search = '') => {
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-
+  async getCoupons(page = 1, pageSize = 10, search = '') {
     let query = supabase.from('coupons').select('*', { count: 'exact' });
-
-    if (search) {
-      query = query.ilike('title', `%${search}%`);
-    }
-
-    const { data, error, count } = await query
-      .order('created_at', { ascending: false })
-      .range(from, to);
-
+    if (search) query = query.ilike('title', `%${search}%`);
+    const { data, count, error } = await query.range((page - 1) * pageSize, page * pageSize - 1).order('created_at', { ascending: false });
     if (error) throw error;
-
-    return {
-      data: data || [],
-      count: count || 0,
-      totalPages: Math.ceil((count || 0) / limit),
-      currentPage: page,
-    };
+    return { data, count: count || 0 };
   },
-  createCoupon: async (couponData: any) => {
-    const { data, error } = await supabase.from('coupons').insert([couponData]).select().single();
+  async createCoupon(coupon: any) {
+    const { data, error } = await supabase.from('coupons').insert([coupon]).select().single();
     if (error) throw error;
     return data;
   },
-  updateCoupon: async (id: string, couponData: any) => {
-    const { data, error } = await supabase.from('coupons').update(couponData).eq('id', id).select().single();
+  async updateCoupon(id: string, coupon: any) {
+    const { data, error } = await supabase.from('coupons').update(coupon).eq('id', id).select().single();
     if (error) throw error;
     return data;
   },
-  deleteCoupon: async (id: string) => {
+  async deleteCoupon(id: string) {
     const { error } = await supabase.from('coupons').delete().eq('id', id);
     if (error) throw error;
-    return true;
   }
 };

@@ -28,7 +28,7 @@ import { DeliverySchema } from '@/lib/utils/schema/delivery';
 import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
 
 // GraphQL
-import { UPDATE_RESTAURANT_DELIVERY } from '@/lib/api/graphql';
+
 import { ApolloError, useMutation } from '@apollo/client';
 import CustomGoogleMapsLocationBounds from '@/lib/ui/useable-components/google-maps/location-bounds-restaurants';
 import { GoogleMapsContext } from '@/lib/context/global/google-maps.context';

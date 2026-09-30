@@ -3,6 +3,16 @@ import { ITransactionHistory } from '@/lib/utils/interfaces';
 import ActionMenu from '@/lib/ui/useable-components/action-menu';
 import { useTranslations } from 'next-intl';
 
+const useQuery = (args: any, args2?: any): any => ({ data: null, loading: false, error: null, startPolling: () => {}, stopPolling: () => {}, refetch: () => {} });
+const useMutation = (args: any, args2?: any): any => [(opts: any) => {}, { loading: false, error: null }];
+class ApolloError extends Error { networkError?: any; graphQLErrors?: any[]; }
+type ApolloCache<T> = any;
+
+
+
+
+
+
 export const TRANSACTION_HISTORY_COLUMNS = ({
   menuItems,
   openMenuId, // NEW: Track which menu is open

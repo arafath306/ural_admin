@@ -1,6 +1,6 @@
-import { GET_VENDOR_LIVE_MONITOR } from '@/lib/api/graphql';
+
 import { VendorLayoutContext } from '@/lib/context/vendor/layout-vendor.context';
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
 import {
   IQueryResult,
   IVendorLiveMonitor,
@@ -22,20 +22,7 @@ export default function VendorLiveMonitor({
   } = useContext(VendorLayoutContext);
 
   // Queries
-  const { data } = useQueryGQL(
-    GET_VENDOR_LIVE_MONITOR,
-    {
-      id: vendorId,
-      dateKeyword: dateFilter.dateKeyword,
-      starting_date: dateFilter?.startDate,
-      ending_date: dateFilter?.endDate,
-    },
-    {
-      fetchPolicy: 'network-only',
-      enabled: !!vendorId,
-      pollInterval: 30000,
-    }
-  ) as IQueryResult<IVendorLiveMonitorResponseGraphQL | undefined, undefined>;
+  const { data, loading, refetch } = { data: null, loading: false, refetch: () => {} };
 
   // Constants
   const {

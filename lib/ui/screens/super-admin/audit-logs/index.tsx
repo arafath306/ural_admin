@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
-import { useQuery } from '@apollo/client';
-import { GET_AUDIT_LOGS } from '@/lib/api/graphql/queries/audit';
+
+
 import AuditLogCard, {
   AuditLog,
 } from '@/lib/ui/screen-components/protected/super-admin/audit-logs/AuditLogCard';

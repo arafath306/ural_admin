@@ -33,11 +33,7 @@ import CustomUploadImageComponent from '@/lib/ui/useable-components/upload/uploa
 import { VendorEditSchema, VendorSchema } from '@/lib/utils/schema';
 
 // GraphQL
-import {
-  CREATE_VENDOR,
-  EDIT_VENDOR,
-  GET_VENDOR_BY_ID,
-} from '@/lib/api/graphql';
+
 
 // Icons
 import { useLazyQueryQL } from '@/lib/hooks/useLazyQueryQL';

@@ -14,10 +14,10 @@ import {
 } from '@/lib/utils/interfaces';
 
 // API
-import { GET_RESTAURANTS_BY_OWNER } from '@/lib/api/graphql';
+
 
 // Hooks
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
 
 // Context
 import { VendorContext } from './vendor.context';

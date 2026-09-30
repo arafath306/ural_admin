@@ -1,42 +1,25 @@
-import supabase from '../client';
 
+import { supabase } from '../client';
 export const adminCuisineService = {
-  getCuisines: async (page = 1, limit = 10, search = '') => {
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-
-    let query = supabase.from('cuisines').select('*, shop_types(name)', { count: 'exact' });
-
-    if (search) {
-      query = query.ilike('name', `%${search}%`);
-    }
-
-    const { data, error, count } = await query
-      .order('created_at', { ascending: false })
-      .range(from, to);
-
+  async getCuisines(page = 1, pageSize = 10, search = '') {
+    let query = supabase.from('cuisines').select('*', { count: 'exact' });
+    if (search) query = query.ilike('name', `%${search}%`);
+    const { data, count, error } = await query.range((page - 1) * pageSize, page * pageSize - 1).order('created_at', { ascending: false });
     if (error) throw error;
-
-    return {
-      data: data || [],
-      count: count || 0,
-      totalPages: Math.ceil((count || 0) / limit),
-      currentPage: page,
-    };
+    return { data, count: count || 0 };
   },
-  createCuisine: async (cuisineData: any) => {
-    const { data, error } = await supabase.from('cuisines').insert([cuisineData]).select().single();
+  async createCuisine(cuisine: any) {
+    const { data, error } = await supabase.from('cuisines').insert([cuisine]).select().single();
     if (error) throw error;
     return data;
   },
-  updateCuisine: async (id: string, cuisineData: any) => {
-    const { data, error } = await supabase.from('cuisines').update(cuisineData).eq('id', id).select().single();
+  async updateCuisine(id: string, cuisine: any) {
+    const { data, error } = await supabase.from('cuisines').update(cuisine).eq('id', id).select().single();
     if (error) throw error;
     return data;
   },
-  deleteCuisine: async (id: string) => {
+  async deleteCuisine(id: string) {
     const { error } = await supabase.from('cuisines').delete().eq('id', id);
     if (error) throw error;
-    return true;
   }
 };

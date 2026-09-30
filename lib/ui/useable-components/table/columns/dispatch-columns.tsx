@@ -19,6 +19,16 @@ import { adminRiderService } from '@/lib/supabase/services/adminRiderService';
 // CSS
 import classes from '@/lib/ui/screen-components/protected/super-admin/dispatch/view/main/index.module.css';
 
+const useQuery = (args: any, args2?: any): any => ({ data: null, loading: false, error: null, startPolling: () => {}, stopPolling: () => {}, refetch: () => {} });
+const useMutation = (args: any, args2?: any): any => [(opts: any) => {}, { loading: false, error: null }];
+class ApolloError extends Error { networkError?: any; graphQLErrors?: any[]; }
+type ApolloCache<T> = any;
+
+
+
+
+
+
 const valueTemplate = (option: IDropdownSelectItem) => (
   <div className="flex items-center justify-start gap-2 dark:text-white">
     <Tag severity={severityChecker(option?.code)} value={option?.label} rounded />

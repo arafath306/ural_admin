@@ -58,7 +58,7 @@ import { onUseLocalStorage } from '@/lib/utils/methods';
 import classes from './app-bar.module.css';
 import { AppLogo } from '@/lib/utils/assets/svgs/logo';
 import { useApolloClient, useQuery } from '@apollo/client';
-import { GET_VENDOR_BY_ID } from '@/lib/api/graphql';
+
 import { useLocale, useTranslations } from 'next-intl';
 import { setUserLocale } from '@/lib/utils/methods/locale';
 import { TLocale } from '@/lib/utils/types/locale';

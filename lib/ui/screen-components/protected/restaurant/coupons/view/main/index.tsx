@@ -19,7 +19,7 @@ import Table from '@/lib/ui/useable-components/table';
 import { IActionMenuItem } from '@/lib/utils/interfaces/action-menu.interface';
 
 // Hooks
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
 import useToast from '@/lib/hooks/useToast';
 import useDebounce from '@/lib/hooks/useDebounce';
 
@@ -27,9 +27,9 @@ import useDebounce from '@/lib/hooks/useDebounce';
 import { RestaurantLayoutContext } from '@/lib/context/restaurant/layout-restaurant.context';
 
 // GraphQL and Utilities
-import { GET_RESTAURANT_COUPONS_PAGINATED } from '@/lib/api/graphql/queries/coupons-restaurant';
-import { DELETE_RESTAURANT_COUPON } from '@/lib/api/graphql/mutations/coupons-restaurant';
-import { useMutation } from '@apollo/client';
+
+
+
 import { useTranslations } from 'next-intl';
 
 export default function CouponsMain({
@@ -55,17 +55,7 @@ export default function CouponsMain({
   const debouncedSearch = useDebounce(globalFilterValue, 500);
 
   // Query
-  const { data, loading } = useQueryGQL(GET_RESTAURANT_COUPONS_PAGINATED, {
-    restaurantId,
-    page: currentPage,
-    limit: rowsPerPage,
-    search: debouncedSearch || undefined,
-  }, {
-    fetchPolicy: 'network-only',
-  }) as IQueryResult<
-    ICouponRestaurantPaginatedGQLResponse | undefined,
-    undefined
-  >;
+  const { data, loading, refetch } = { data: null, loading: false, refetch: () => {} };
 
   //Mutation
   const [mutateDelete, { loading: mutationLoading }] = useMutation(
