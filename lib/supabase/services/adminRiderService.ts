@@ -268,9 +268,37 @@ export const adminRiderService = {
     const { data: zoneData } = await supabase.from('zones').select('title').eq('id', input.zone).maybeSingle();
     const zoneName = zoneData?.title || input.zone || 'Unknown Zone';
 
+    // Step 1: Create Supabase Auth account so rider can login to mobile app
+    const email = input.email || `${input.username}@ural.com`;
+    const password = input.password || '123456';
+
+    let authUserId: string | undefined;
+    try {
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          name: input.name,
+          username: input.username,
+          role: 'rider',
+        },
+      });
+
+      if (authError) {
+        console.error('Auth account creation error:', authError);
+      } else {
+        authUserId = authData.user?.id;
+      }
+    } catch (authErr) {
+      console.error('Failed to create auth account:', authErr);
+    }
+
+    // Step 2: Insert into riders table
     const insertPayload: any = {
       name: input.name,
       username: input.username,
+      email,
       phone: input.phone || '',
       available: input.available ?? true,
       is_online: input.available ?? true,
@@ -285,6 +313,10 @@ export const adminRiderService = {
       wallet_balance: 0,
       current_wallet: 0,
     };
+
+    if (authUserId) {
+      insertPayload.id = authUserId;
+    }
 
     if (input.password) {
       insertPayload.password = input.password;
