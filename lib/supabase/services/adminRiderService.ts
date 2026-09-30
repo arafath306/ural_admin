@@ -268,27 +268,22 @@ export const adminRiderService = {
     const { data: zoneData } = await supabase.from('zones').select('title').eq('id', input.zone).maybeSingle();
     const zoneName = zoneData?.title || input.zone || 'Unknown Zone';
 
-    // Step 1: Create Supabase Auth account so rider can login to mobile app
+    // Step 1: Create Supabase Auth account via server API (uses service role key)
     const email = input.email || `${input.username}@ural.com`;
     const password = input.password || '123456';
 
     let authUserId: string | undefined;
     try {
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          name: input.name,
-          username: input.username,
-          role: 'rider',
-        },
+      const res = await fetch('/api/create-auth-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name: input.name, username: input.username }),
       });
-
-      if (authError) {
-        console.error('Auth account creation error:', authError);
+      const result = await res.json();
+      if (result.userId) {
+        authUserId = result.userId;
       } else {
-        authUserId = authData.user?.id;
+        console.error('Auth creation failed:', result.error);
       }
     } catch (authErr) {
       console.error('Failed to create auth account:', authErr);
