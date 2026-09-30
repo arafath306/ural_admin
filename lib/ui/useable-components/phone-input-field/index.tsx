@@ -72,7 +72,7 @@ export default function CustomPhoneTextField({
         className={`flex items-center ${className} ${style?.borderColor === 'red' ? 'phone-error' : ''}`}
       >
         <PhoneInput
-          defaultCountry="au"
+          defaultCountry="bd"
           value={value ?? ''}
           onChange={handlePhoneInputChange}
           style={inputStyle}

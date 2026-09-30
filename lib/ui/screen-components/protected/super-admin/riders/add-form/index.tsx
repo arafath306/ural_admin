@@ -18,9 +18,8 @@ import CustomPasswordTextField from '@/lib/ui/useable-components/password-input-
 import CustomPhoneTextField from '@/lib/ui/useable-components/phone-input-field';
 
 // Utilities and Constants
-import { RiderErrors, VEHICLE_TYPE } from '@/lib/utils/constants';
-import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
-import { RiderSchema } from '@/lib/utils/schema/rider';
+import { VEHICLE_TYPE } from '@/lib/utils/constants';
+import { RiderSchema, EditRiderSchema } from '@/lib/utils/schema/rider';
 
 // Toast & Localization
 import useToast from '@/lib/hooks/useToast';
@@ -37,15 +36,14 @@ export default function RiderAddForm({
   isAddRiderVisible,
 }: IRidersAddFormComponentProps) {
   const initialValues: IRiderForm = {
-    name: '',
-    username: '',
+    name: rider?.name || '',
+    username: rider?.username || '',
     password: '',
-    ...rider,
+    confirmPassword: '',
+    phone: rider?.phone ? rider.phone.toString() : '',
     vehicleType: rider
       ? VEHICLE_TYPE.find((vt) => vt?.code === rider?.vehicleType) || null
       : null,
-    confirmPassword: '',
-    phone: rider ? +rider.phone : null,
     zone: rider?.zone
       ? { label: rider.zone.title, code: rider.zone._id }
       : null,
@@ -67,7 +65,7 @@ export default function RiderAddForm({
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [isAddRiderVisible]);
 
   // Form Submission
   const handleSubmit = async (
@@ -128,25 +126,28 @@ export default function RiderAddForm({
       visible={isAddRiderVisible}
       position={position}
       onHide={onHide}
-      className="w-full sm:w-[450px] dark:text-white dark:bg-dark-950 border dark:border-dark-600"
+      className="w-full sm:w-[480px] dark:text-white dark:bg-dark-950 border dark:border-dark-600"
     >
       <div className="flex h-full w-full items-center justify-start">
         <div className="h-full w-full">
           <div className="flex flex-col gap-2">
             <div className="mb-2 flex flex-col">
-              <span className="text-lg">
+              <span className="text-xl font-bold dark:text-white">
                 {rider ? t('Edit') : t('Add')} {t('Rider')}
+              </span>
+              <span className="text-xs text-gray-500">
+                {rider ? 'Update rider profile details' : 'Create a new rider account for delivery'}
               </span>
             </div>
 
             <div>
               <Formik
                 initialValues={initialValues}
-                validationSchema={RiderSchema}
+                validationSchema={rider ? EditRiderSchema : RiderSchema}
                 onSubmit={handleSubmit}
                 enableReinitialize
-                validateOnChange={false}
-                validateOnBlur={false}
+                validateOnChange={true}
+                validateOnBlur={true}
               >
                 {({
                   values,
@@ -155,156 +156,187 @@ export default function RiderAddForm({
                   handleSubmit,
                   setFieldValue,
                   setFieldTouched,
+                  setTouched,
                   touched,
                 }) => {
                   return (
                     <Form onSubmit={handleSubmit}>
                       <div className="space-y-4">
-                        <CustomTextField
-                          type="text"
-                          name="name"
-                          placeholder={t('Name')}
-                          maxLength={35}
-                          value={values.name}
-                          onChange={handleChange}
-                          showLabel={true}
-                          style={{
-                            borderColor: onErrorMessageMatcher(
-                              'name',
-                              errors?.name,
-                              RiderErrors
-                            )
-                              ? 'red'
-                              : '',
-                          }}
-                        />
+                        {/* Name */}
+                        <div>
+                          <CustomTextField
+                            type="text"
+                            name="name"
+                            placeholder={t('Name')}
+                            maxLength={35}
+                            value={values.name}
+                            onChange={handleChange}
+                            showLabel={true}
+                            style={{
+                              borderColor: errors?.name && touched?.name ? 'red' : '',
+                            }}
+                          />
+                          {errors?.name && touched?.name && (
+                            <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+                          )}
+                        </div>
 
-                        <CustomTextField
-                          type="text"
-                          name="username"
-                          placeholder={t('Username')}
-                          maxLength={35}
-                          value={values.username}
-                          onChange={handleChange}
-                          showLabel={true}
-                          style={{
-                            borderColor: onErrorMessageMatcher(
-                              'username',
-                              errors?.username,
-                              RiderErrors
-                            )
-                              ? 'red'
-                              : '',
-                          }}
-                        />
+                        {/* Username */}
+                        <div>
+                          <CustomTextField
+                            type="text"
+                            name="username"
+                            placeholder={t('Username')}
+                            maxLength={35}
+                            value={values.username}
+                            onChange={handleChange}
+                            showLabel={true}
+                            style={{
+                              borderColor: errors?.username && touched?.username ? 'red' : '',
+                            }}
+                          />
+                          {errors?.username && touched?.username && (
+                            <p className="text-red-500 text-xs mt-1">{errors.username}</p>
+                          )}
+                        </div>
 
-                        <CustomPasswordTextField
-                          placeholder={t('Password')}
-                          name="password"
-                          maxLength={20}
-                          value={values.password}
-                          showLabel={true}
-                          onChange={handleChange}
-                          style={{
-                            borderColor: onErrorMessageMatcher(
-                              'password',
-                              errors?.password,
-                              RiderErrors
-                            )
-                              ? 'red'
-                              : '',
-                          }}
-                        />
+                        {/* Password */}
+                        <div>
+                          <CustomPasswordTextField
+                            placeholder={rider ? 'New Password (Optional)' : t('Password')}
+                            name="password"
+                            maxLength={20}
+                            value={values.password}
+                            showLabel={true}
+                            onChange={handleChange}
+                            feedback={false}
+                            style={{
+                              borderColor: errors?.password && touched?.password ? 'red' : '',
+                            }}
+                          />
+                          {errors?.password && touched?.password && (
+                            <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+                          )}
+                        </div>
 
-                        <CustomPasswordTextField
-                          placeholder={t('Confirm Password')}
-                          name="confirmPassword"
-                          maxLength={20}
-                          showLabel={true}
-                          value={values.confirmPassword ?? ''}
-                          onChange={handleChange}
-                          feedback={false}
-                          style={{
-                            borderColor: onErrorMessageMatcher(
-                              'confirmPassword',
-                              errors?.confirmPassword,
-                              RiderErrors
-                            )
-                              ? 'red'
-                              : '',
-                          }}
-                        />
+                        {/* Confirm Password */}
+                        <div>
+                          <CustomPasswordTextField
+                            placeholder={t('Confirm Password')}
+                            name="confirmPassword"
+                            maxLength={20}
+                            showLabel={true}
+                            value={values.confirmPassword ?? ''}
+                            onChange={handleChange}
+                            feedback={false}
+                            style={{
+                              borderColor: errors?.confirmPassword && touched?.confirmPassword ? 'red' : '',
+                            }}
+                          />
+                          {errors?.confirmPassword && touched?.confirmPassword && (
+                            <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+                          )}
+                        </div>
 
-                        <CustomDropdownComponent
-                          placeholder={t('Vehicle Type')}
-                          options={VEHICLE_TYPE}
-                          showLabel={true}
-                          name="vehicleType"
-                          selectedItem={values.vehicleType}
-                          setSelectedItem={setFieldValue}
-                          style={{
-                            borderColor: onErrorMessageMatcher(
-                              'vehicleType',
-                              errors?.vehicleType,
-                              RiderErrors
-                            )
-                              ? 'red'
-                              : '',
-                          }}
-                        />
+                        {/* Vehicle Type */}
+                        <div>
+                          <CustomDropdownComponent
+                            placeholder={t('Vehicle Type')}
+                            options={VEHICLE_TYPE}
+                            showLabel={true}
+                            name="vehicleType"
+                            selectedItem={values.vehicleType}
+                            setSelectedItem={setFieldValue}
+                            style={{
+                              borderColor: errors?.vehicleType && touched?.vehicleType ? 'red' : '',
+                            }}
+                          />
+                          {errors?.vehicleType && touched?.vehicleType && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {typeof errors.vehicleType === 'string' ? errors.vehicleType : 'Please select a vehicle type'}
+                            </p>
+                          )}
+                        </div>
 
-                        <CustomDropdownComponent
-                          placeholder={t('Zone')}
-                          options={
-                            zones.map((val) => ({
-                              label: val.title,
-                              code: val._id,
-                            }))
-                          }
-                          showLabel={true}
-                          name="zone"
-                          selectedItem={values.zone}
-                          setSelectedItem={setFieldValue}
-                          style={{
-                            borderColor: onErrorMessageMatcher(
-                              'zone',
-                              errors?.zone,
-                              RiderErrors
-                            )
-                              ? 'red'
-                              : '',
-                          }}
-                        />
+                        {/* Zone */}
+                        <div>
+                          <CustomDropdownComponent
+                            placeholder={t('Zone')}
+                            options={
+                              zones.map((val) => ({
+                                label: val.title,
+                                code: val._id,
+                              }))
+                            }
+                            showLabel={true}
+                            name="zone"
+                            selectedItem={values.zone}
+                            setSelectedItem={setFieldValue}
+                            style={{
+                              borderColor: errors?.zone && touched?.zone ? 'red' : '',
+                            }}
+                          />
+                          {errors?.zone && touched?.zone && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {typeof errors.zone === 'string' ? errors.zone : 'Please select a zone'}
+                            </p>
+                          )}
+                        </div>
 
-                        <CustomPhoneTextField
-                          type="text"
-                          mask="999-999-9999"
-                          placeholder={t('Phone Number')}
-                          name="phone"
-                          showLabel={true}
-                          value={values?.phone?.toString()}
-                          onChange={(code: string) => {
-                            setFieldValue('phone', code);
-                            setFieldTouched('phone', true, false);
-                          }}
-                          style={{
-                            borderColor:
-                              onErrorMessageMatcher(
-                                'phone',
-                                errors?.phone,
-                                RiderErrors
-                              ) && touched?.phone
-                                ? 'red'
-                                : '',
-                          }}
-                        />
+                        {/* Phone Number */}
+                        <div>
+                          <CustomPhoneTextField
+                            type="text"
+                            placeholder={t('Phone Number')}
+                            name="phone"
+                            showLabel={true}
+                            value={values?.phone?.toString()}
+                            onChange={(code: string) => {
+                              setFieldValue('phone', code);
+                              setFieldTouched('phone', true, true);
+                            }}
+                            style={{
+                              borderColor: errors?.phone && touched?.phone ? 'red' : '',
+                            }}
+                          />
+                          {errors?.phone && touched?.phone && (
+                            <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                          )}
+                        </div>
 
-                        <div className="mt-4 flex justify-end">
+                        {/* Submit Button */}
+                        <div className="mt-6 flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={onHide}
+                            className="h-10 px-5 border border-gray-300 dark:border-dark-600 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-800 transition"
+                          >
+                            Cancel
+                          </button>
                           <CustomButton
-                            className="h-10 w-fit border-gray-300 border dark:border-dark-600 bg-black px-8 text-white"
+                            className="h-10 w-fit border-gray-300 border dark:border-dark-600 bg-black px-8 text-white hover:bg-gray-800 transition"
                             label={rider ? t('Update') : t('Add')}
                             type="submit"
                             loading={mutationLoading}
+                            onClick={() => {
+                              const errKeys = Object.keys(errors);
+                              if (errKeys.length > 0) {
+                                setTouched({
+                                  name: true,
+                                  username: true,
+                                  password: true,
+                                  confirmPassword: true,
+                                  vehicleType: true,
+                                  zone: true,
+                                  phone: true,
+                                });
+                                showToast({
+                                  type: 'error',
+                                  title: 'Required Information',
+                                  message: 'Please fill in all required fields marked in red.',
+                                });
+                              }
+                            }}
                           />
                         </div>
                       </div>

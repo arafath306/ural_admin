@@ -2,33 +2,58 @@ import * as Yup from 'yup';
 
 export const RiderSchema = Yup.object().shape({
   name: Yup.string()
-    .max(35)
+    .max(35, 'Name cannot exceed 35 characters')
     .trim()
     .matches(/\S/, 'Name cannot be only spaces')
-    .required('Required'),
-  username: Yup.string().min(2).max(35).required('Required'),
-    password: Yup.string()
-    .required('Required')
-    .min(6, 'At least 6 characters')
-    .matches(/[a-z]/, 'At least one lowercase letter (a-z)')
-    .matches(/[A-Z]/, 'At least one uppercase letter (A-Z)')
-    .matches(/[0-9]/, 'At least one number (0-9)')
-    .matches(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/, 'At least one special character'),
+    .required('Name is required'),
+  username: Yup.string()
+    .min(2, 'Username must be at least 2 characters')
+    .max(35, 'Username cannot exceed 35 characters')
+    .required('Username is required'),
+  password: Yup.string()
+    .min(4, 'Password must be at least 4 characters')
+    .required('Password is required'),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref('password'), null], 'Passwords do not match')
+    .required('Confirm password is required'),
+  zone: Yup.object()
+    .nullable()
+    .required('Please select a zone'),
+  phone: Yup.string()
+    .min(5, 'Minimum 5 numbers required')
+    .required('Phone number is required'),
+  vehicleType: Yup.object()
+    .nullable()
+    .required('Please select a vehicle type'),
+});
+
+export const EditRiderSchema = Yup.object().shape({
+  name: Yup.string()
+    .max(35, 'Name cannot exceed 35 characters')
+    .trim()
+    .matches(/\S/, 'Name cannot be only spaces')
+    .required('Name is required'),
+  username: Yup.string()
+    .min(2, 'Username must be at least 2 characters')
+    .max(35, 'Username cannot exceed 35 characters')
+    .required('Username is required'),
+  password: Yup.string()
+    .nullable()
+    .notRequired(),
   confirmPassword: Yup.string()
     .nullable()
-    .oneOf([Yup.ref('password'), null], 'Password must match')
-    .required('Required'),
+    .when('password', {
+      is: (val: any) => typeof val === 'string' && val.length > 0,
+      then: (schema) => schema.oneOf([Yup.ref('password'), null], 'Passwords do not match').required('Confirm password is required'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
   zone: Yup.object()
-    .shape({
-      label: Yup.string().required('Required'),
-      code: Yup.string().required('Required'),
-    })
-    .required('Required'),
-  phone: Yup.string().required('Required').min(5,"Minimum 5 Numbers are Required"),
+    .nullable()
+    .required('Please select a zone'),
+  phone: Yup.string()
+    .min(5, 'Minimum 5 numbers required')
+    .required('Phone number is required'),
   vehicleType: Yup.object()
-    .shape({
-      label: Yup.string().required('Required'),
-      code: Yup.string().required('Required'),
-    })
-    .required('Required'),
+    .nullable()
+    .required('Please select a vehicle type'),
 });
