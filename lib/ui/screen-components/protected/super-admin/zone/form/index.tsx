@@ -1,39 +1,21 @@
-import { CREATE_ZONE, EDIT_ZONE } from '@/lib/api/graphql';
-// Core
+'use client';
 import { Form, Formik, FormikHelpers } from 'formik';
-
-// Prime React
 import { Sidebar } from 'primereact/sidebar';
-
-// Interface and Types
-import {
-  IQueryResult,
-  IZoneAddFormComponentProps,
-} from '@/lib/utils/interfaces';
-import { IRiderZonesResponse } from '@/lib/utils/interfaces';
-
-// Components
+import { IZoneAddFormComponentProps } from '@/lib/utils/interfaces';
 import CustomButton from '@/lib/ui/useable-components/button';
 import CustomTextField from '@/lib/ui/useable-components/input-field';
-// Utilities and Constants
 import { ZoneErrors } from '@/lib/utils/constants';
 import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
 import { ZoneSchema } from '@/lib/utils/schema';
-
-//Toast
 import useToast from '@/lib/hooks/useToast';
-
-//GraphQL
-
-
-import { ApolloError, useMutation } from '@/lib/api/graphql';
 import { IZoneForm } from '@/lib/utils/interfaces/forms/zone.form.interface';
 import CustomTextAreaField from '@/lib/ui/useable-components/custom-text-area-field';
 import CustomGoogleMapsLocationZoneBounds from '@/lib/ui/useable-components/google-maps/location-bounds-zone';
 import { TPolygonPoints } from '@/lib/utils/types';
+import { adminZoneService } from '@/lib/supabase/services/adminZoneService';
 import { useTranslations } from 'next-intl';
 import { GoogleMapsContext } from '@/lib/context/global/google-maps.context';
-import { ChangeEvent, useContext } from 'react';
+import { ChangeEvent, useContext, useState } from 'react';
 
 const DESCRIPTION_MAX_LENGTH = 100;
 
@@ -43,7 +25,6 @@ export default function ZoneAddForm({
   position = 'right',
   isAddZoneVisible,
 }: IZoneAddFormComponentProps) {
-  // State
   const initialValues: IZoneForm = {
     _id: zone?._id ?? '',
     title: zone?.title || '',
@@ -51,80 +32,44 @@ export default function ZoneAddForm({
     coordinates: zone?.location?.coordinates ?? [[[]]],
   };
 
-  // Hooks
   const t = useTranslations();
   const { showToast } = useToast();
-
-  // Context
   const { isLoaded } = useContext(GoogleMapsContext);
+  const [mutationLoading, setMutationLoading] = useState(false);
 
-  // Query
-  const { data, loading, refetch } = { data: null, loading: false, refetch: () => {} };
-
-  // Mutation
-  const [createZone, { loading: mutationLoading }] = useMutation(
-    zone ? EDIT_ZONE : CREATE_ZONE,
-    {
-      refetchQueries: 'active',
-      awaitRefetchQueries: true,
-    }
-  );
-
-  // Form Submission
-  const handleSubmit = (
+  const handleSubmit = async (
     values: IZoneForm,
     { resetForm }: FormikHelpers<IZoneForm>
   ) => {
-    if (values.coordinates[0].length < 2) {
-      return showToast({
+    try {
+      setMutationLoading(true);
+      const input = {
+        title: values.title,
+        description: values.description,
+        coordinates: values.coordinates,
+      };
+      if (zone?._id) {
+        await adminZoneService.updateZone(zone._id, input);
+      } else {
+        await adminZoneService.createZone(input);
+      }
+      showToast({
+        type: 'success',
+        title: zone ? t('Edit Zone') : t('Add Zone'),
+        message: zone ? t('Zone has been updated successfully') : t('Zone has been added successfully'),
+      });
+      resetForm();
+      onHide();
+    } catch (err: any) {
+      showToast({
         type: 'error',
-        title: 'Zone not selected',
-        message: 'Please provide a valid zone',
+        title: zone ? t('Edit Zone') : t('Add Zone'),
+        message: err?.message || t('Something went wrong, Please try again'),
       });
-    }
-    if (data) {
-      createZone({
-        variables: {
-          zone: {
-            _id: zone ? zone._id : '',
-            title: values.title,
-            description: values.description,
-            coordinates:
-              Array.isArray(values.coordinates) &&
-              Array.isArray(values.coordinates[0]) &&
-              Array.isArray(values.coordinates[0][0]) &&
-              values.coordinates[0][0].length > 1
-                ? values.coordinates
-                : [[[0, 0]]],
-          },
-        },
-        onCompleted: () => {
-          showToast({
-            type: 'success',
-            title: `${zone ? t('New') : t('Edit')} ${t('Zone')}`,
-            message: `${t('Zone has been')} ${zone ? t('updated') : t('added')} ${t('successfully')}`,
-          });
-          resetForm();
-          onHide();
-        },
-        onError: ({ graphQLErrors, networkError }: ApolloError) => {
-          const message =
-            graphQLErrors[0]?.message ??
-            networkError?.message ??
-            t('Something went wrong, Please try again');
-
-          showToast({
-            type: 'error',
-            title: `${zone ? t('New') : t('Edit')} ${t('Zone')}`,
-            message,
-          });
-        },
-      });
+    } finally {
+      setMutationLoading(false);
     }
   };
-
-
-
 
   return (
     <Sidebar
