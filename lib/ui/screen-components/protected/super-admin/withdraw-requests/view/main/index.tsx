@@ -1,26 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// Core
-import { useState, useMemo, useEffect } from 'react';
 
-// Prime React
+import { useState, useMemo, useEffect, useDeferredValue } from 'react';
 import { FilterMatchMode } from 'primereact/api';
-
-// Components
 import Table from '@/lib/ui/useable-components/table';
 import WithdrawRequestTableHeader from '../header/table-header';
 import { WITHDRAW_REQUESTS_TABLE_COLUMNS } from '@/lib/ui/useable-components/table/columns/withdraw-requests-columns';
-
-// GraphQL
-import { GET_ALL_WITHDRAW_REQUESTS } from '@/lib/api/graphql';
-import { useQuery } from '@apollo/client';
-
-// Interfaces
-import {
-  IGetWithDrawRequestsData,
-  IWithDrawRequest,
-} from '@/lib/utils/interfaces/';
-import { IActionMenuProps, IQueryResult } from '@/lib/utils/interfaces';
-import useDebounce from '@/lib/hooks/useDebounce';
+import { IWithDrawRequest, IActionMenuProps } from '@/lib/utils/interfaces';
+import { adminWithdrawRequestService } from '@/lib/supabase/services/adminWithdrawRequestService';
 
 export default function WithdrawRequestsSuperAdminMain({
   setVisible,
@@ -29,90 +14,64 @@ export default function WithdrawRequestsSuperAdminMain({
   setVisible: (value: boolean) => void;
   setSelectedRequest: (request: IWithDrawRequest | undefined) => void;
 }) {
-  // States
   const [selectedActions, setSelectedActions] = useState<string[]>([]);
   const [selectedData, setSelectedData] = useState<IWithDrawRequest[]>([]);
   const [globalFilterValue, setGlobalFilterValue] = useState('');
-  const [filters, setFilters] = useState({
-    global: {
-      value: null as string | null,
-      matchMode: FilterMatchMode.CONTAINS,
-    },
-  });
-
-  // Pagination state
+  const [filters, setFilters] = useState({ global: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS } });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  // Hooks
-  const debouncedSearch = useDebounce(globalFilterValue);
+  const debouncedSearch = useDeferredValue(globalFilterValue);
 
-  // Get userType from selected actions (RIDER or STORE)
-  const selectedUserType = selectedActions.find((action) =>
-    ['RIDER', 'STORE'].includes(action)
-  );
+  const selectedUserType = selectedActions.find((action) => ['RIDER', 'STORE'].includes(action));
+  const selectedStatus = selectedActions.find((action) => ['REQUESTED', 'TRANSFERRED', 'CANCELLED'].includes(action));
 
-  // Get status filter from selected actions
-  const selectedStatus = selectedActions.find((action) =>
-    ['REQUESTED', 'TRANSFERRED', 'CANCELLED'].includes(action)
-  );
-
-  // Query with proper typing
-  const { data, loading, refetch } = useQuery(GET_ALL_WITHDRAW_REQUESTS, {
-    variables: {
-      pageSize: pageSize,
-      pageNo: currentPage,
-      userType: selectedUserType,
-      search: debouncedSearch,
-    },
-    fetchPolicy: 'cache-and-network',
-  }) as unknown as IQueryResult<IGetWithDrawRequestsData | undefined, any>;
-
-  // Global search handler
-  const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const _filters = { ...filters };
-    _filters['global'].value = value;
-    setFilters(_filters);
-    setGlobalFilterValue(value);
+  const fetchRequests = async () => {
+    setLoading(true);
+    try {
+      const { data, count } = await adminWithdrawRequestService.getWithdrawRequests(currentPage, pageSize, debouncedSearch);
+      setRequests(data.map(req => ({
+        _id: req.id,
+        requestAmount: req.amount,
+        requestTime: req.created_at,
+        status: req.status,
+        rider: req.riders ? { _id: req.rider_id, name: req.riders.name, email: req.riders.email } : null,
+        vendor: req.vendors ? { _id: req.vendor_id, name: req.vendors.name, email: req.vendors.email } : null,
+      })));
+      setTotalRecords(count);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Handle page change
-  const onPageChange = (page: number, size: number) => {
-    setCurrentPage(page);
-    setPageSize(size);
+  useEffect(() => { fetchRequests(); }, [currentPage, pageSize, debouncedSearch, selectedUserType]);
+
+  const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFilters({ ...filters, global: { ...filters.global, value } });
+    setGlobalFilterValue(value);
   };
 
   const menuItems: IActionMenuProps<IWithDrawRequest>['items'] = [
     {
       label: 'Bank Details',
       command: (data?: IWithDrawRequest) => {
-        if (data) {
-          setSelectedRequest(data);
-          setVisible(true);
-        }
+        if (data) { setSelectedRequest(data); setVisible(true); }
       },
     },
   ];
 
-  // Filter data based on status on the frontend
   const filteredData = useMemo(() => {
-    if (!data?.withdrawRequests?.data) return [];
-
-    let filtered = data.withdrawRequests.data;
-
-    // Apply status filter if selected
-    if (selectedStatus) {
-      filtered = filtered.filter((item) => item.status === selectedStatus);
-    }
-
+    if (!requests) return [];
+    let filtered = requests;
+    if (selectedStatus) filtered = filtered.filter((item) => item.status === selectedStatus);
     return filtered;
-  }, [data?.withdrawRequests?.data, selectedStatus]);
-
-  // Use Effect
-  useEffect(() => {
-    refetch({ search: debouncedSearch });
-  }, [selectedUserType, debouncedSearch]);
+  }, [requests, selectedStatus]);
 
   return (
     <div className="p-3">
@@ -130,15 +89,9 @@ export default function WithdrawRequestsSuperAdminMain({
         setSelectedData={setSelectedData}
         selectedData={selectedData}
         loading={loading}
-        columns={WITHDRAW_REQUESTS_TABLE_COLUMNS({
-          menuItems,
-          currentPage,
-          pageSize,
-          search: debouncedSearch,
-          selectedActions,
-        })}
-        totalRecords={data?.withdrawRequests?.pagination?.total}
-        onPageChange={onPageChange}
+        columns={WITHDRAW_REQUESTS_TABLE_COLUMNS({ menuItems, currentPage, pageSize, search: debouncedSearch, selectedActions })}
+        totalRecords={totalRecords}
+        onPageChange={(page, size) => { setCurrentPage(page); setPageSize(size); }}
         currentPage={currentPage}
         rowsPerPage={pageSize}
       />
