@@ -1,7 +1,7 @@
 'use client';
 
 // Core
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 
 // Formik
 import { Form, Formik } from 'formik';
@@ -24,29 +24,33 @@ import { APP_NAME, SignInErrors } from '@/lib/utils/constants';
 import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
 
 // Icons
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faArrowUpRightFromSquare,
-  faEnvelope,
-} from '@fortawesome/free-solid-svg-icons';
+import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
 
-// GraphQL
-import { OWNER_LOGIN } from '@/lib/api/graphql';
-import { ToastContext } from '@/lib/context/global/toast.context';
-import { ApolloError, useMutation } from '@apollo/client';
+// Hooks
+import useToast from '@/lib/hooks/useToast';
+import { useRouter } from 'next/navigation';
+import { useUserContext } from '@/lib/hooks/useUser';
 
 // Schema
 import { onUseLocalStorage } from '@/lib/utils/methods';
 import { setAuthTokens } from '@/lib/utils/methods/auth';
 import { SignInSchema } from '@/lib/utils/schema';
-import { useRouter } from 'next/navigation';
-import { useUserContext } from '@/lib/hooks/useUser';
-import { DEFAULT_ROUTES } from '@/lib/utils/constants/routes';
 
-const initialValues: ISignInForm = {
-  email: process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? '',
-  password: process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? '',
-};).trim().toLowerCase();
+export default function SignInEmailPassword() {
+  const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
+  const router = useRouter();
+  const { refreshUserSession } = useUserContext();
+
+  const initialValues: ISignInForm = {
+    email: process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? '',
+    password: process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? '',
+  };
+
+  const onSubmitHandler = async (data: ISignInForm) => {
+    setLoading(true);
+    try {
+      const email = (data.email || '').trim().toLowerCase();
       const password = (data.password || '').trim();
 
       const ownerLogin = {
