@@ -1,229 +1,106 @@
-// GraphQL API imports
-import { GET_COMMISSION_RATES_PAGINATED, updateCommission } from '@/lib/api/graphql';
 
-// Context imports
 import { ToastContext } from '@/lib/context/global/toast.context';
-
-// Custom hooks
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
-// UI components
 import Table from '@/lib/ui/useable-components/table';
-
-// Utility functions
-// import { generateDummyCommissionRates } from '@/lib/utils/dummy';
-
-// Type definitions
-import { IQueryResult, ICommissionRateRestaurantResponse, IPaginationCommissionRateVars } from '@/lib/utils/interfaces';
-
-// Apollo Client hooks
-import { useMutation } from '@apollo/client';
-
-// React hooks
 import { useContext, useDeferredValue, useEffect, useState } from 'react';
-
-// Table column definitions
-import { COMMISSION_RATE_ACTIONS } from '@/lib/utils/constants';
-
 import CommissionRateHeader from '../header/table-header';
 import { useTranslations } from 'next-intl';
 import { COMMISSION_RATE_COLUMNS } from '@/lib/ui/useable-components/table/columns/comission-rate-columns';
-
-interface CommissionRateData {
-  commissionRate: {
-    restaurant: ICommissionRateRestaurantResponse[];
-    currentPage: number;
-    totalPages: number;
-    nextPage: boolean;
-    prevPage: boolean;
-    totalCount: number;
-  };
-}
+import { adminCommissionRateService } from '@/lib/supabase/services/adminCommissionRateService';
+import { COMMISSION_RATE_ACTIONS } from '@/lib/utils/constants';
 
 export default function CommissionRateMain() {
-  //Hooks
   const t = useTranslations();
-
-  // States
-  const [restaurants, setRestaurants] = useState<ICommissionRateRestaurantResponse[] | null>(null);
-  const [editingRestaurantIds, setEditingRestaurantIds] = useState<Set<string>>(
-    new Set()
-  );
-  const [selectedRestaurants, setSelectedRestaurants] = useState<
-    ICommissionRateRestaurantResponse[]
-  >([]);
-  const [loadingRestaurant, setLoadingRestaurant] = useState<string | null>(
-    null
-  );
+  const [restaurants, setRestaurants] = useState<any[]>([]);
+  const [editingRestaurantIds, setEditingRestaurantIds] = useState<Set<string>>(new Set());
+  const [selectedRestaurants, setSelectedRestaurants] = useState<any[]>([]);
+  const [loadingRestaurant, setLoadingRestaurant] = useState<string | null>(null);
   const [selectedActions, setSelectedActions] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortField, setSortField] = useState<'name' | 'commissionRate'>('name');
   const [sortOrder, setSortOrder] = useState<1 | -1>(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [loading, setLoading] = useState(true);
   const deferredSearchTerm = useDeferredValue(searchTerm);
-
-  // Context
   const { showToast } = useContext(ToastContext);
 
-  // Query
-  const { data, error, refetch, loading } = useQueryGQL(
-    GET_COMMISSION_RATES_PAGINATED,
-    {
-      page: currentPage,
-      limit: rowsPerPage,
-      search: deferredSearchTerm || undefined,
-      sortBy: sortField === 'commissionRate' ? 'COMMISSION_RATE' : 'NAME',
-      sortOrder: sortOrder === -1 ? 'DESC' : 'ASC',
-    },
-    {
-      fetchPolicy: 'cache-and-network',
+  const fetchRestaurants = async () => {
+    setLoading(true);
+    try {
+      const { data, count } = await adminCommissionRateService.getCommissionRates(
+        currentPage, rowsPerPage, deferredSearchTerm, sortField, sortOrder === 1 ? 'asc' : 'desc'
+      );
+      setRestaurants(data.map(r => ({
+        _id: r.id,
+        name: r.name,
+        commissionRate: r.commission_rate,
+      })));
+      setTotalRecords(count);
+    } catch (err) {
+      showToast({ type: 'error', title: t('Error'), message: t('Failed to fetch commission rates') });
+    } finally {
+      setLoading(false);
     }
-  ) as IQueryResult<CommissionRateData | undefined, IPaginationCommissionRateVars>;
+  };
 
-  // Mutation
-  const [updateCommissionMutation] = useMutation(updateCommission);
+  useEffect(() => {
+    fetchRestaurants();
+  }, [currentPage, rowsPerPage, deferredSearchTerm, sortField, sortOrder]);
 
-  // Handlers
   const handleSave = async (restaurantId: string) => {
-    const restaurant = restaurants?.find((r) => r._id === restaurantId);
-    const commissionRate = Number(restaurant?.commissionRate);
-    if (!restaurant || !Number.isFinite(commissionRate) || commissionRate < 0 || commissionRate > 100) {
-      return showToast({
-        type: 'error',
-        title: t('Commission Updated'),
-        message: `${t('Commission')} ${t('Update')} ${t('failed')}`,
+    const restaurant = restaurants.find(r => r._id === restaurantId);
+    if (!restaurant) return;
+    setLoadingRestaurant(restaurantId);
+    try {
+      await adminCommissionRateService.updateCommissionRate(restaurantId, Number(restaurant.commissionRate));
+      showToast({ type: 'success', title: t('Success'), message: t('Commission rate updated') });
+      setEditingRestaurantIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(restaurantId);
+        return newSet;
       });
-    }
-    if (restaurant) {
-      setLoadingRestaurant(restaurantId);
-      try {
-        await updateCommissionMutation({
-          variables: {
-            id: restaurantId,
-            commissionRate,
-          },
-        });
-        showToast({
-          type: 'success',
-          title: t('Commission Updated'),
-          message: `${t('Commission rate updated for')} ${restaurant.name}`,
-          duration: 2000,
-        });
-        setEditingRestaurantIds((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(restaurantId);
-          return newSet;
-        });
-        refetch();
-      } catch (error) {
-        showToast({
-          type: 'error',
-          title: t('Error'),
-          message: `${t('Error updating commission rate for')} ${restaurant.name}`,
-          duration: 2000,
-        });
-      } finally {
-        setLoadingRestaurant(null);
-      }
+      fetchRestaurants();
+    } catch (error) {
+      showToast({ type: 'error', title: t('Error'), message: t('Update failed') });
+    } finally {
+      setLoadingRestaurant(null);
     }
   };
 
   const handleCommissionRateChange = (restaurantId: string, value: number) => {
-    setRestaurants((prevRestaurants) =>
-      prevRestaurants
-        ? prevRestaurants.map((restaurant) =>
-          restaurant._id === restaurantId
-            ? { ...restaurant, commissionRate: value }
-            : restaurant
-        )
-        : null
-    );
-    const originalRate = Number(data?.commissionRate?.restaurant?.find((item) => item._id === restaurantId)?.commissionRate);
-    setEditingRestaurantIds((prev) => {
-      const newSet = new Set(prev);
-      if (Number.isFinite(value) && value === originalRate) newSet.delete(restaurantId);
-      else newSet.add(restaurantId);
-      return newSet;
-    });
+    setRestaurants(prev => prev.map(r => r._id === restaurantId ? { ...r, commissionRate: value } : r));
+    setEditingRestaurantIds(prev => new Set(prev).add(restaurantId));
   };
 
   const getFilteredRestaurants = () => {
     if (!restaurants) return [];
+    if (selectedActions.length === 0) return restaurants;
     return restaurants.filter((restaurant) => {
-      const nameMatches = restaurant.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-
-      // Always show restaurants that are currently being edited
-      if (editingRestaurantIds.has(restaurant._id)) {
-        return true;
-      }
-
-      // Apply name filter
-      if (!nameMatches) {
-        return false;
-      }
-
-      // If no commission rate filters are applied, show all name matches
-      if (selectedActions.length === 0) {
-        return true;
-      }
-
-      // Apply commission rate filters
       return selectedActions.some((action) => {
         switch (action) {
-          case COMMISSION_RATE_ACTIONS.MORE_THAN_5:
-            return restaurant.commissionRate > 5;
-          case COMMISSION_RATE_ACTIONS.MORE_THAN_10:
-            return restaurant.commissionRate > 10;
-          case COMMISSION_RATE_ACTIONS.MORE_THAN_20:
-            return restaurant.commissionRate > 20;
-          default:
-            return false;
+          case COMMISSION_RATE_ACTIONS.MORE_THAN_5: return restaurant.commissionRate > 5;
+          case COMMISSION_RATE_ACTIONS.MORE_THAN_10: return restaurant.commissionRate > 10;
+          case COMMISSION_RATE_ACTIONS.MORE_THAN_20: return restaurant.commissionRate > 20;
+          default: return false;
         }
       });
     });
   };
 
-  // Use Effects
-  useEffect(() => {
-    if (data?.commissionRate?.restaurant) {
-      setRestaurants(data.commissionRate.restaurant);
-    } else if (error) {
-      showToast({
-        type: 'error',
-        title: t('Error Fetching Restaurants'),
-        message: t(
-          'An error occurred while fetching restaurants - Please try again later'
-        ),
-        duration: 2000,
-      });
-    }
-  }, [data, error]);
-
   return (
     <div className="p-3">
       <Table
-        data={
-          (loading || restaurants === null) ? [] : getFilteredRestaurants()
-        }
+        data={getFilteredRestaurants()}
         setSelectedData={setSelectedRestaurants}
         selectedData={selectedRestaurants}
-        columns={COMMISSION_RATE_COLUMNS({
-          handleSave,
-          handleCommissionRateChange,
-          loadingRestaurant,
-          editingRestaurantIds,
-        })}
+        columns={COMMISSION_RATE_COLUMNS({ handleSave, handleCommissionRateChange, loadingRestaurant, editingRestaurantIds })}
         className="commission-rate-table"
-        loading={loading || restaurants === null}
+        loading={loading}
         currentPage={currentPage}
         rowsPerPage={rowsPerPage}
-        totalRecords={data?.commissionRate?.totalCount || 0}
-        onPageChange={(page, rows) => {
-          setCurrentPage(page);
-          setRowsPerPage(rows);
-        }}
+        totalRecords={totalRecords}
+        onPageChange={(page, rows) => { setCurrentPage(page); setRowsPerPage(rows); }}
         sortField={sortField}
         sortOrder={sortOrder}
         onSortChange={(field, order) => {
@@ -236,10 +113,7 @@ export default function CommissionRateMain() {
           <CommissionRateHeader
             selectedActions={selectedActions}
             setSelectedActions={setSelectedActions}
-            onSearch={(value) => {
-              setSearchTerm(value);
-              setCurrentPage(1);
-            }}
+            onSearch={(value) => { setSearchTerm(value); setCurrentPage(1); }}
           />
         }
       />
