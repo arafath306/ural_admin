@@ -1,4 +1,6 @@
 import { supabase } from '../client';
+import { extractLatLngPoints, pointsToGeoJSON } from '@/lib/utils/methods';
+import { DEFAULT_POLYGON } from '@/lib/utils/constants';
 
 function mapRow(r: any) {
   return {
@@ -13,14 +15,18 @@ function mapRow(r: any) {
   };
 }
 
-function buildGeoJSON(coordinates?: number[][][]) {
-  if (!coordinates || !coordinates[0] || coordinates[0].length < 2) {
+export function buildGeoJSON(coordinates?: any) {
+  const points = extractLatLngPoints(coordinates);
+  if (points.length >= 3) {
     return {
       type: 'Polygon',
-      coordinates: [[[90.35,23.7],[90.45,23.7],[90.45,23.85],[90.35,23.85],[90.35,23.7]]],
+      coordinates: pointsToGeoJSON(points),
     };
   }
-  return { type: 'Polygon', coordinates };
+  return {
+    type: 'Polygon',
+    coordinates: pointsToGeoJSON(DEFAULT_POLYGON),
+  };
 }
 
 export const adminZoneService = {
@@ -45,17 +51,20 @@ export const adminZoneService = {
     return { data: (data || []).map(mapRow), totalCount, currentPage: page, totalPages: Math.max(1, Math.ceil(totalCount / limit)) };
   },
 
-  async createZone(input: { title: string; description: string; coordinates?: number[][][] }) {
+  async createZone(input: { title: string; description: string; coordinates?: any }) {
     const location = buildGeoJSON(input.coordinates);
     const { data, error } = await supabase.from('zones').insert({ title: input.title, description: input.description, location, is_active: true }).select().single();
     if (error) throw new Error(error.message || 'Failed to create zone');
     return mapRow(data);
   },
 
-  async updateZone(id: string, input: { title: string; description: string; coordinates?: number[][][] }) {
+  async updateZone(id: string, input: { title: string; description: string; coordinates?: any }) {
     const updates: any = { title: input.title, description: input.description, updated_at: new Date().toISOString() };
-    if (input.coordinates && input.coordinates[0] && input.coordinates[0].length >= 2) {
-      updates.location = buildGeoJSON(input.coordinates);
+    if (input.coordinates) {
+      const points = extractLatLngPoints(input.coordinates);
+      if (points.length >= 3) {
+        updates.location = buildGeoJSON(points);
+      }
     }
     const { data, error } = await supabase.from('zones').update(updates).eq('id', id).select().single();
     if (error) throw new Error(error.message || 'Failed to update zone');

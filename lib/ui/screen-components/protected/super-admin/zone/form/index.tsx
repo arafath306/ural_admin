@@ -4,8 +4,9 @@ import dynamic from 'next/dynamic';
 import { IZoneAddFormComponentProps } from '@/lib/utils/interfaces';
 import CustomButton from '@/lib/ui/useable-components/button';
 import CustomTextField from '@/lib/ui/useable-components/input-field';
-import { ZoneErrors } from '@/lib/utils/constants';
+import { ZoneErrors, DEFAULT_POLYGON } from '@/lib/utils/constants';
 import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
+import { extractLatLngPoints, pointsToGeoJSON } from '@/lib/utils/methods';
 import { ZoneSchema } from '@/lib/utils/schema';
 import useToast from '@/lib/hooks/useToast';
 import { IZoneForm } from '@/lib/utils/interfaces/forms/zone.form.interface';
@@ -30,11 +31,12 @@ interface IZoneAddFormFullProps {
 }
 
 export default function ZoneAddForm({ onHide, zone }: IZoneAddFormFullProps) {
+  const defaultGeoJSON = pointsToGeoJSON(DEFAULT_POLYGON);
   const initialValues: IZoneForm = {
     _id: zone?._id ?? '',
     title: zone?.title || '',
     description: zone?.description || '',
-    coordinates: zone?.location?.coordinates ?? [[[]]],
+    coordinates: zone?.location?.coordinates || defaultGeoJSON,
   };
 
   const t = useTranslations();
@@ -47,16 +49,29 @@ export default function ZoneAddForm({ onHide, zone }: IZoneAddFormFullProps) {
   ) => {
     try {
       setMutationLoading(true);
+      const points = extractLatLngPoints(values.coordinates);
+      if (points.length < 3) {
+        showToast({
+          type: 'error',
+          title: 'Zone Boundary Missing',
+          message: 'Please draw a zone boundary with at least 3 points on the map.',
+        });
+        setMutationLoading(false);
+        return;
+      }
+
       const input = {
         title: values.title,
         description: values.description,
-        coordinates: values.coordinates,
+        coordinates: pointsToGeoJSON(points),
       };
+
       if (zone?._id) {
         await adminZoneService.updateZone(zone._id, input);
       } else {
         await adminZoneService.createZone(input);
       }
+
       showToast({
         type: 'success',
         title: zone ? 'Zone Updated' : 'Zone Added',
@@ -94,6 +109,8 @@ export default function ZoneAddForm({ onHide, zone }: IZoneAddFormFullProps) {
             }
             handleChange(event);
           };
+
+          const activePoints = extractLatLngPoints(values.coordinates);
 
           return (
             <Form onSubmit={handleSubmit} className="flex flex-1 gap-4 overflow-hidden w-full">
@@ -140,16 +157,20 @@ export default function ZoneAddForm({ onHide, zone }: IZoneAddFormFullProps) {
                 <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm text-blue-700 dark:text-blue-300">
                   <p className="font-medium mb-1">🗺️ Map Instructions:</p>
                   <ol className="list-decimal list-inside space-y-1 text-xs">
-                    <li>Search for a location in the map</li>
-                    <li>Use the Draw Polygon tool (left toolbar)</li>
-                    <li>Click on the map to draw the zone boundary</li>
-                    <li>Click <strong>Save Zone</strong> to confirm selection</li>
+                    <li>Search your area in Rajshahi or drag the map</li>
+                    <li>Use the polygon tool on the map to draw or adjust points</li>
+                    <li>Points automatically synchronize with the form</li>
+                    <li>Click <strong>{zone ? 'Update' : 'Add'}</strong> below to save</li>
                   </ol>
                 </div>
 
-                {values.coordinates?.[0]?.length >= 2 && (
-                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-sm text-green-700 dark:text-green-300">
-                    ✅ Zone boundary selected ({values.coordinates[0].length} points)
+                {activePoints.length >= 3 ? (
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-sm text-green-700 dark:text-green-300 font-medium">
+                    ✅ Zone boundary active ({activePoints.length} points)
+                  </div>
+                ) : (
+                  <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-sm text-amber-700 dark:text-amber-300">
+                    ⚠️ Please define at least 3 points on the map
                   </div>
                 )}
 

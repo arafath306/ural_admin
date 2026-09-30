@@ -7,7 +7,11 @@ import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 import 'leaflet/dist/leaflet.css';
 
 import { ILocationPoint, IZoneCustomGoogleMapsBoundComponentProps } from '@/lib/utils/interfaces';
-import { calculatePolygonCentroid, transformPolygon } from '@/lib/utils/methods';
+import {
+  extractLatLngPoints,
+  pointsToGeoJSON,
+  calculateCenterPoints,
+} from '@/lib/utils/methods';
 import { DEFAULT_CENTER, DEFAULT_POLYGON } from '@/lib/utils/constants';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -15,27 +19,6 @@ import { faMapMarker } from '@fortawesome/free-solid-svg-icons';
 import { AutoComplete, AutoCompleteSelectEvent } from 'primereact/autocomplete';
 import { useTranslations } from 'next-intl';
 import CustomShape from '../shapes';
-
-// Guard: check if _path has valid non-empty, non-NaN coordinates
-function hasValidPath(p: any): boolean {
-  try {
-    if (!p || !Array.isArray(p) || p.length === 0) return false;
-    const ring = p[0];
-    if (!Array.isArray(ring) || ring.length < 3) return false;
-    const first = ring[0];
-    if (!Array.isArray(first) || first.length < 2) return false;
-    const [lng, lat] = first;
-    return (
-      typeof lng === 'number' &&
-      typeof lat === 'number' &&
-      !isNaN(lng) &&
-      !isNaN(lat) &&
-      (Math.abs(lng) > 0.0001 || Math.abs(lat) > 0.0001)
-    );
-  } catch {
-    return false;
-  }
-}
 
 export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoogleMapsBoundComponentProps) {
   useEffect(() => {
@@ -57,6 +40,7 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
   const [deliveryZoneType, setDeliveryZoneType] = useState('polygon');
   const [center, setCenter] = useState(DEFAULT_CENTER);
   const [path, setPath] = useState<ILocationPoint[]>(DEFAULT_POLYGON);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const [options, setOptions] = useState<any[]>([]);
   const [inputValue, setInputValue] = useState<string>('');
@@ -64,7 +48,7 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
   // Handle Nominatim search
   const onSearch = async (event: any) => {
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(event.query)}`);
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(event.query + ' Bangladesh')}`);
       const data = await res.json();
       const results = data.map((item: any) => ({
         description: item.display_name,
@@ -77,66 +61,85 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
     }
   };
 
-  const createPolygonAroundPoint = (center: { lat: number; lng: number }, sizeMeters = 500): ILocationPoint[] => {
+  const createPolygonAroundPoint = (c: { lat: number; lng: number }, sizeMeters = 500): ILocationPoint[] => {
     const latOffset = sizeMeters * 0.0000089;
-    const lngOffset = (sizeMeters * 0.0000089) / Math.cos((center.lat * Math.PI) / 180);
+    const lngOffset = (sizeMeters * 0.0000089) / Math.cos((c.lat * Math.PI) / 180);
     return [
-      { lat: center.lat + latOffset, lng: center.lng - lngOffset },
-      { lat: center.lat + latOffset, lng: center.lng + lngOffset },
-      { lat: center.lat - latOffset, lng: center.lng + lngOffset },
-      { lat: center.lat - latOffset, lng: center.lng - lngOffset },
+      { lat: c.lat + latOffset, lng: c.lng - lngOffset },
+      { lat: c.lat + latOffset, lng: c.lng + lngOffset },
+      { lat: c.lat - latOffset, lng: c.lng + lngOffset },
+      { lat: c.lat - latOffset, lng: c.lng - lngOffset },
     ];
+  };
+
+  const bindPolygonEvents = (layer: L.Polygon) => {
+    const syncFromLayer = () => {
+      const latlngs = layer.getLatLngs();
+      const ring = Array.isArray(latlngs[0]) ? latlngs[0] : latlngs;
+      const points = (ring as L.LatLng[]).map((ll) => ({ lat: ll.lat, lng: ll.lng }));
+      if (points.length >= 3) {
+        setPath(points);
+        onSetZoneCoordinates(pointsToGeoJSON(points));
+      }
+    };
+    layer.on('pm:edit', syncFromLayer);
+    layer.on('pm:dragend', syncFromLayer);
+    layer.on('pm:markerdragend', syncFromLayer);
   };
 
   const onSelect = (event: AutoCompleteSelectEvent) => {
     const selected = event.value;
-    if (selected) {
+    if (selected && mapRef.current) {
       const centerPoint = { lat: selected.lat, lng: selected.lng };
       setCenter(centerPoint);
       setInputValue(selected.description);
 
-      let newPath: ILocationPoint[] = [];
-      if (deliveryZoneType === 'polygon') {
-        newPath = createPolygonAroundPoint(centerPoint, 500);
-      }
+      const newPath = createPolygonAroundPoint(centerPoint, 500);
       setPath(newPath);
 
-      if (mapRef.current) {
-        mapRef.current.setView([centerPoint.lat, centerPoint.lng], 14);
+      if (polygonRef.current) {
+        mapRef.current.removeLayer(polygonRef.current);
       }
+
+      const newPoly = L.polygon(newPath.map((p) => [p.lat, p.lng] as L.LatLngTuple), {
+        color: '#1d4ed8',
+        fillColor: '#3b82f6',
+        fillOpacity: 0.3,
+        weight: 2,
+      }).addTo(mapRef.current);
+
+      polygonRef.current = newPoly;
+      bindPolygonEvents(newPoly);
+
+      mapRef.current.setView([centerPoint.lat, centerPoint.lng], 14);
+      mapRef.current.fitBounds(newPoly.getBounds(), { padding: [30, 30] });
+
+      onSetZoneCoordinates(pointsToGeoJSON(newPath));
     }
   };
 
   // Initialize Map
   useEffect(() => {
     if (!mapContainerRef.current) return;
-    
-    let initialCenter = { ...DEFAULT_CENTER };
-    let initialPath = [...DEFAULT_POLYGON];
 
-    // Only use _path if it has valid real coordinates
-    if (hasValidPath(_path)) {
-      try {
-        const transformed = transformPolygon(_path[0]);
-        const clean = transformed.filter(p => !isNaN(p.lat) && !isNaN(p.lng));
-        if (clean.length > 2) {
-          const centroid = calculatePolygonCentroid(_path[0]);
-          if (!isNaN(centroid.lat) && !isNaN(centroid.lng) && (Math.abs(centroid.lat) > 0.0001 || Math.abs(centroid.lng) > 0.0001)) {
-            initialPath = clean;
-            initialCenter = centroid;
-          }
-        }
-      } catch (e) {
-        console.warn('Invalid zone path, using default center', e);
-      }
+    // Determine initial points
+    const extracted = extractLatLngPoints(_path);
+    let initialPath = DEFAULT_POLYGON;
+    let initialCenter = DEFAULT_CENTER;
+
+    if (extracted.length >= 3) {
+      initialPath = extracted;
+      initialCenter = calculateCenterPoints(extracted);
     }
 
     setPath(initialPath);
     setCenter(initialCenter);
+    // Auto-sync initial points immediately
+    onSetZoneCoordinates(pointsToGeoJSON(initialPath));
 
     const map = L.map(mapContainerRef.current).setView([initialCenter.lat, initialCenter.lng], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
+      attribution: '© OpenStreetMap contributors',
     }).addTo(map);
 
     map.pm.addControls({
@@ -153,29 +156,48 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
       removalMode: true,
     });
 
-    const updateCoordinates = () => {
-      if (polygonRef.current) {
-        const latlngs = polygonRef.current.getLatLngs();
-        const firstRing = Array.isArray(latlngs[0]) ? latlngs[0] : latlngs;
-        const newPath = (firstRing as L.LatLng[]).map((ll) => ({ lat: ll.lat, lng: ll.lng }));
-        setPath(newPath);
-      }
-    };
+    // Draw initial polygon
+    const initialPoly = L.polygon(initialPath.map((p) => [p.lat, p.lng] as L.LatLngTuple), {
+      color: '#1d4ed8',
+      fillColor: '#3b82f6',
+      fillOpacity: 0.3,
+      weight: 2,
+    }).addTo(map);
 
+    polygonRef.current = initialPoly;
+    bindPolygonEvents(initialPoly);
+
+    try {
+      map.fitBounds(initialPoly.getBounds(), { padding: [30, 30] });
+    } catch (e) {
+      console.warn('fitBounds error:', e);
+    }
+
+    // Geoman event: when user finishes drawing a polygon
     map.on('pm:create', (e) => {
       if (polygonRef.current) {
         map.removeLayer(polygonRef.current);
       }
-      polygonRef.current = e.layer as L.Polygon;
-      polygonRef.current.on('pm:edit', updateCoordinates);
-      polygonRef.current.on('pm:dragend', updateCoordinates);
-      polygonRef.current.on('pm:markerdragend', updateCoordinates);
-      updateCoordinates();
+      const newLayer = e.layer as L.Polygon;
+      polygonRef.current = newLayer;
+      bindPolygonEvents(newLayer);
+
+      const latlngs = newLayer.getLatLngs();
+      const ring = Array.isArray(latlngs[0]) ? latlngs[0] : latlngs;
+      const points = (ring as L.LatLng[]).map((ll) => ({ lat: ll.lat, lng: ll.lng }));
+      if (points.length >= 3) {
+        setPath(points);
+        onSetZoneCoordinates(pointsToGeoJSON(points));
+      }
     });
 
-    map.on('pm:remove', () => {
-      polygonRef.current = null;
-      setPath([]);
+    // Geoman event: when polygon is removed
+    map.on('pm:remove', (e) => {
+      if (e.layer === polygonRef.current) {
+        polygonRef.current = null;
+        setPath([]);
+        onSetZoneCoordinates([]);
+      }
     });
 
     mapRef.current = map;
@@ -185,40 +207,11 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
     };
   }, []);
 
-  // Draw initial polygon when path changes (only once at mount)
-  useEffect(() => {
-    if (!mapRef.current) return;
-    const map = mapRef.current;
-
-    if (polygonRef.current) {
-      map.removeLayer(polygonRef.current);
-    }
-
-    const validPath = path.filter(p => !isNaN(p.lat) && !isNaN(p.lng));
-    if (validPath.length > 2) {
-      const latlngs = validPath.map(p => [p.lat, p.lng] as L.LatLngTuple);
-      polygonRef.current = L.polygon(latlngs, { color: '#000000', pmIgnore: false }).addTo(map);
-      
-      const updateCoordinates = () => {
-        const p = polygonRef.current?.getLatLngs();
-        if (p) {
-          const ring = Array.isArray(p[0]) ? p[0] : p;
-          setPath((ring as L.LatLng[]).map(ll => ({ lat: ll.lat, lng: ll.lng })));
-        }
-      };
-
-      polygonRef.current.on('pm:edit', updateCoordinates);
-      polygonRef.current.on('pm:dragend', updateCoordinates);
-      polygonRef.current.on('pm:markerdragend', updateCoordinates);
-
-      map.fitBounds(polygonRef.current.getBounds(), { padding: [20, 20] });
-    }
-  }, [path]);
-
   const handleSave = () => {
     if (path.length > 2) {
-      const transformedPath = path.map(p => ({ lat: p.lat, lng: p.lng }));
-      onSetZoneCoordinates(transformedPath);
+      onSetZoneCoordinates(pointsToGeoJSON(path));
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
     }
   };
 
@@ -235,7 +228,7 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
             field="description"
             onChange={(e) => setInputValue(e.value?.description || e.value)}
             onSelect={onSelect}
-            placeholder="Search location..."
+            placeholder="Search Rajshahi location (e.g. Bornali, Fire Service, Hatem Khan)..."
             className="w-full"
             inputClassName="w-full px-2 py-3 rounded-lg border-none focus:outline-none text-sm"
             pt={{
@@ -245,14 +238,31 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
           />
         </span>
       </div>
-      {/* Map */}
+
+      {/* Map Canvas */}
       <div ref={mapContainerRef} className="flex-1 w-full rounded-t z-0" />
+
       {/* Footer */}
       <div className="flex items-center justify-between p-3 bg-gray-50 border-t border-gray-200 rounded-b z-10">
         <CustomShape
           onSetPath={(newPath) => {
             setDeliveryZoneType('polygon');
             setPath(newPath);
+            if (mapRef.current) {
+              if (polygonRef.current) {
+                mapRef.current.removeLayer(polygonRef.current);
+              }
+              const poly = L.polygon(newPath.map((p) => [p.lat, p.lng] as L.LatLngTuple), {
+                color: '#1d4ed8',
+                fillColor: '#3b82f6',
+                fillOpacity: 0.3,
+                weight: 2,
+              }).addTo(mapRef.current);
+              polygonRef.current = poly;
+              bindPolygonEvents(poly);
+              mapRef.current.fitBounds(poly.getBounds(), { padding: [30, 30] });
+            }
+            onSetZoneCoordinates(pointsToGeoJSON(newPath));
           }}
           type={deliveryZoneType}
           center={center}
@@ -260,14 +270,17 @@ export default function MapImpl({ _path, onSetZoneCoordinates }: IZoneCustomGoog
         />
         <div className="flex items-center gap-3">
           {path.length > 2 && (
-            <span className="text-xs text-green-600 font-medium">✅ {path.length} points selected</span>
+            <span className="text-xs text-green-700 font-semibold bg-green-100 px-2 py-1 rounded">
+              ✅ {path.length} points active
+            </span>
           )}
           <button
+            type="button"
             onClick={handleSave}
             disabled={path.length < 3}
-            className="px-5 py-2 bg-black text-white text-sm rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="px-5 py-2 bg-black text-white text-sm rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-1.5"
           >
-            Save Zone
+            {saveSuccess ? '✓ Zone Saved' : 'Save Zone'}
           </button>
         </div>
       </div>
