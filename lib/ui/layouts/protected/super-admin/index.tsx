@@ -22,7 +22,6 @@ import { useConfiguration } from '@/lib/hooks/useConfiguration';
 
 // GraphQl
 
-import { useApolloClient } from '@apollo/client';
 
 const Layout = ({ children }: IProvider) => {
   // Context
@@ -30,7 +29,7 @@ const Layout = ({ children }: IProvider) => {
     useContext<LayoutContextProps>(LayoutContext);
 
   // Hooks
-  const client = useApolloClient();
+  const client = { clearStore: () => {} } as any;
   const { user } = useUserContext();
   const {
     FIREBASE_AUTH_DOMAIN,

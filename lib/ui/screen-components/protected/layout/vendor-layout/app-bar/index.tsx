@@ -57,7 +57,7 @@ import { onUseLocalStorage } from '@/lib/utils/methods';
 // Styles
 import classes from './app-bar.module.css';
 import { AppLogo } from '@/lib/utils/assets/svgs/logo';
-import { useApolloClient, useQuery } from '@apollo/client';
+import {  useQuery } from '@apollo/client';
 
 import { useLocale, useTranslations } from 'next-intl';
 import { setUserLocale } from '@/lib/utils/methods/locale';
@@ -70,7 +70,7 @@ const VendorAppTopbar = () => {
   // Hooks
   const t = useTranslations();
   const currentLocale = useLocale();
-  const apolloClient = useApolloClient();
+  const apolloClient = { clearStore: () => {} } as any;
 
   // Local Storage
   const vendorId = onUseLocalStorage('get', 'vendorId');

@@ -1,7 +1,7 @@
 
 import { useContext, useEffect, useState, useDeferredValue } from 'react';
 import Table from '@/lib/ui/useable-components/table';
-import { FOOD_TABLE_COLUMNS } from '@/lib/ui/useable-components/table/columns/foods-columns';
+import { FOODS_TABLE_COLUMNS } from '@/lib/ui/useable-components/table/columns/foods-columns';
 import CustomDialog from '@/lib/ui/useable-components/delete-dialog';
 import { RestaurantLayoutContext } from '@/lib/context/restaurant/layout-restaurant.context';
 import FoodTableHeader from '../header/table-header';
@@ -69,7 +69,7 @@ export default function FoodMain({ setIsAddFoodVisible, setFood }: any) {
         setSelectedData={setSelectedFoods}
         selectedData={selectedFoods}
         loading={loading}
-        columns={FOOD_TABLE_COLUMNS({ menuItems })}
+        columns={FOODS_TABLE_COLUMNS({ menuItems })}
         totalRecords={totalRecords}
         currentPage={currentPage}
         rowsPerPage={rowsPerPage}

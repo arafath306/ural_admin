@@ -67,7 +67,7 @@ import { setUserLocale } from '@/lib/utils/methods/locale';
 
 // GraphQL
 import {
-  useApolloClient,
+  
   useMutation,
   useQuery,
   useSubscription,
@@ -93,7 +93,7 @@ const AppTopbar = () => {
   const currentLocale = useLocale();
   const { resolvedTheme } = useTheme();
   const isDarkMode = resolvedTheme === 'dark';
-  const apolloClient = useApolloClient();
+  const apolloClient = { clearStore: () => {} } as any;
 
   // Ref
   const containerRef = useRef<HTMLDivElement>(null);

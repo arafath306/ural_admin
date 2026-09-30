@@ -1,5 +1,4 @@
 import React, { createContext, useCallback, useEffect, useState } from 'react';
-import { useApolloClient } from '@apollo/client';
 
 import { ILoginResponse, IOwnerSessionDataResponse } from '@/lib/utils/interfaces';
 import {
@@ -70,7 +69,7 @@ const isAuthFailure = (error: unknown): boolean => {
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const apolloClient = useApolloClient();
+  const apolloClient = { clearStore: () => {} } as any;
   const [user, setUser] = useState<ILoginResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSessionVerified, setIsSessionVerified] = useState(false);
