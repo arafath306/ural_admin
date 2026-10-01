@@ -38,17 +38,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    // 1. Create or link user in Supabase Auth
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPhone = (phoneNumber || phone || '').toString().trim();
+    const cleanName = (name || 'Vendor').trim();
+
+    // 1. Create or find user in Supabase Auth
     let authUserId: string | null = null;
 
     if (password) {
       try {
         const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
-          email: email.trim().toLowerCase(),
+          email: cleanEmail,
           password: password,
           email_confirm: true,
           user_metadata: {
-            name: name || 'Vendor',
+            name: cleanName,
             role: 'vendor',
             userType: 'VENDOR',
           },
@@ -57,11 +61,11 @@ export async function POST(req: NextRequest) {
         if (authData?.user) {
           authUserId = authData.user.id;
         } else if (authErr) {
-          console.warn('Auth user creation warning (might already exist):', authErr.message);
-          // Find existing user if email already registered
+          console.warn('Auth user creation warning:', authErr.message);
+          // If already exists, find existing user id
           const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
           const existing = listData?.users?.find(
-            (u) => u.email?.toLowerCase() === email.trim().toLowerCase()
+            (u) => u.email?.toLowerCase() === cleanEmail
           );
           if (existing) {
             authUserId = existing.id;
@@ -72,11 +76,33 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 2. Insert into vendors table
+    // 2. IMPORTANT: To satisfy vendors_user_id_fkey, authUserId MUST exist in public.users!
+    if (authUserId) {
+      try {
+        const { error: userUpsertErr } = await supabaseAdmin.from('users').upsert({
+          id: authUserId,
+          name: cleanName,
+          email: cleanEmail,
+          phone: cleanPhone,
+          user_type: 'VENDOR',
+          is_active: true,
+        });
+        if (userUpsertErr) {
+          console.error('Error upserting into public.users:', userUpsertErr);
+          // If public.users insertion fails, fallback user_id to null so vendor creation won't break
+          authUserId = null;
+        }
+      } catch (userErr) {
+        console.error('Exception upserting into public.users:', userErr);
+        authUserId = null;
+      }
+    }
+
+    // 3. Insert into vendors table
     const payload: any = {
-      name: name || 'Vendor',
-      email: email.trim().toLowerCase(),
-      phone: phoneNumber || phone || '',
+      name: cleanName,
+      email: cleanEmail,
+      phone: cleanPhone,
       is_active: true,
       user_id: authUserId,
     };
@@ -104,6 +130,10 @@ export async function PUT(req: NextRequest) {
     const body = await req.json();
     const { id, name, email, phoneNumber, phone, password } = body;
 
+    const cleanEmail = email ? email.trim().toLowerCase() : undefined;
+    const cleanPhone = (phoneNumber || phone) ? (phoneNumber || phone).toString().trim() : undefined;
+    const cleanName = name ? name.trim() : undefined;
+
     // If password provided, update user in Supabase Auth if we have user_id
     if (password && id) {
       try {
@@ -124,9 +154,9 @@ export async function PUT(req: NextRequest) {
     }
 
     const updates: any = {};
-    if (name) updates.name = name;
-    if (email) updates.email = email.trim().toLowerCase();
-    if (phoneNumber || phone) updates.phone = phoneNumber || phone;
+    if (cleanName) updates.name = cleanName;
+    if (cleanEmail) updates.email = cleanEmail;
+    if (cleanPhone) updates.phone = cleanPhone;
 
     const { data, error } = await supabaseAdmin
       .from('vendors')
@@ -160,10 +190,6 @@ export async function DELETE(req: NextRequest) {
       .eq('id', id)
       .maybeSingle();
 
-    if (vendorData?.user_id) {
-      await supabaseAdmin.auth.admin.deleteUser(vendorData.user_id).catch(() => {});
-    }
-
     const { error } = await supabaseAdmin
       .from('vendors')
       .delete()
@@ -172,6 +198,12 @@ export async function DELETE(req: NextRequest) {
     if (error) {
       console.error('API DELETE vendor error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Clean up public.users & auth.users if vendor was linked
+    if (vendorData?.user_id) {
+      await supabaseAdmin.from('users').delete().eq('id', vendorData.user_id).catch(() => {});
+      await supabaseAdmin.auth.admin.deleteUser(vendorData.user_id).catch(() => {});
     }
 
     return NextResponse.json({ success: true, message: 'Vendor deleted successfully' });
