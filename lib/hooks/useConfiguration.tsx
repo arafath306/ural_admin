@@ -73,7 +73,7 @@ export const useConfiguration = () => {
   const CUSTOMER_DEMO_ZONE_ID = configuration?.customerDemoZoneId;
   const CURRENCY_CODE = configuration?.currency;
   const CURRENCY_SYMBOL = configuration?.currency;
-  const ISPAID_VERSION = configuration?.isPaidVersion;
+  const ISPAID_VERSION = true; // Unlocked paid version for Ural Multi-vendor
 
   return {
     SERVER_URL: process.env.NEXT_PUBLIC_SERVER_URL,

@@ -1,3 +1,4 @@
+import { adminVendorService } from '@/lib/supabase/services/adminVendorService';
 // Icons
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -118,22 +119,24 @@ export default function VendorCard({
   // API Hanlders
   const onHandleConfirmDeleteVendor = async () => {
     try {
-      if (ISPAID_VERSION) {
-        await deleteVendor({ variables: { id: vendorId } });
-        setDeletePopupOpen(false);
-      } else {
-        setDeletePopupOpen(false);
-        showToast({
-          type: 'error',
-          title: t('You are using free version'),
-          message: t('This Feature is only Available in Paid Version'),
-        });
+      const targetId = _id || vendorId;
+      await adminVendorService.deleteVendor(targetId);
+      setDeletePopupOpen(false);
+      showToast({
+        type: 'success',
+        title: t('Vendor Delete'),
+        message: t('Vendor has been deleted successfully'),
+      });
+      onResetVendor(true);
+      if (vendorResponse?.refetch) {
+        vendorResponse.refetch();
       }
     } catch (error: any) {
+      setDeletePopupOpen(false);
       showToast({
         type: 'error',
         title: t('Vendor Delete'),
-        message: t('Vendor delete failed'),
+        message: error?.message || t('Vendor delete failed'),
       });
     }
   };

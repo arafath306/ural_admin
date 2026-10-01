@@ -142,15 +142,7 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
   };
 
   const handleDelete = async () => {
-    if (isPaidVersion) {
-      hardDeleteRestaurant({ variables: { id: _id } });
-    } else {
-      showToast({
-        type: 'error',
-        title: t('You are using free version'),
-        message: t('This Feature is only Available in Paid Version'),
-      });
-    }
+    hardDeleteRestaurant({ variables: { id: _id } });
   };
 
   return (

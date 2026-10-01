@@ -145,3 +145,38 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ error: 'Vendor ID is required' }, { status: 400 });
+    }
+
+    const { data: vendorData } = await supabaseAdmin
+      .from('vendors')
+      .select('user_id')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (vendorData?.user_id) {
+      await supabaseAdmin.auth.admin.deleteUser(vendorData.user_id).catch(() => {});
+    }
+
+    const { error } = await supabaseAdmin
+      .from('vendors')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('API DELETE vendor error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Vendor deleted successfully' });
+  } catch (err: any) {
+    console.error('API DELETE vendor exception:', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}

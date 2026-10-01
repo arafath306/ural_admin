@@ -55,4 +55,15 @@ export const adminVendorService = {
     }
     return json.data;
   },
+  async deleteVendor(id: string) {
+    const res = await fetch(`/api/vendors?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+
+    const json = await res.json();
+    if (!res.ok || json.error) {
+      throw new Error(json.error || 'Failed to delete vendor');
+    }
+    return json;
+  },
 };
