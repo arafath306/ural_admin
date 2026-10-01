@@ -33,8 +33,8 @@ import CustomUploadImageComponent from '@/lib/ui/useable-components/upload/uploa
 // Schema
 import { VendorEditSchema, VendorSchema } from '@/lib/utils/schema';
 
-// GraphQL
-
+// Supabase Service
+import { adminVendorService } from '@/lib/supabase/services/adminVendorService';
 
 // Icons
 import { useLazyQueryQL } from '@/lib/hooks/useLazyQueryQL';
@@ -43,7 +43,6 @@ import CustomPhoneTextField from '@/lib/ui/useable-components/phone-input-field'
 import { useTranslations } from 'next-intl';
 
 const initialValues: IVendorForm = {
-  // name: '',
   email: '',
   password: '',
   confirmPassword: '',
@@ -74,26 +73,6 @@ export default function VendorAddForm({
     ...initialValues,
   });
 
-  // Mutations
-  const [createVendor] = useMutation(
-    isEditingVendor && vendorId ? EDIT_VENDOR : CREATE_VENDOR,
-    {
-      //  refetchQueries: [{ query: GET_VENDORS, fetchPolicy: 'network-only' }],
-      onError,
-      onCompleted: () => {
-        showToast({
-          type: 'success',
-          title: t('New Vendor'),
-          message: `${t('Vendor has been')} ${isEditingVendor ? t('edited') : t('added')} ${t('successfully')}`,
-          duration: 3000,
-        });
-
-        onSetVendorFormVisible(false);
-        vendorResponse.refetch();
-      },
-    }
-  );
-
   const {
     fetch: fetchVendorById,
     loading,
@@ -106,41 +85,49 @@ export default function VendorAddForm({
   // Handlers
   const onVendorCreate = async (data: IVendorForm) => {
     try {
-      await createVendor({
-        variables: {
-          vendorInput: {
-            _id: isEditingVendor && vendorId ? vendorId : '',
-            name: data.firstName + ' ' + data.lastName,
-            email: data.email,
-            image: data.image,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            phoneNumber: `${data.phoneNumber?.toString()}`,
-            ...(data.password ? { password: data.password } : {}),
-          },
-        },
-      });
-    } catch {
+      if (isEditingVendor && vendorId) {
+        await adminVendorService.updateVendor(vendorId, {
+          name: `${data.firstName} ${data.lastName}`.trim(),
+          email: data.email,
+          phoneNumber: `${data.phoneNumber || ''}`,
+          image: data.image || '',
+        });
+        showToast({
+          type: 'success',
+          title: t('Edit') + ' ' + t('Vendor'),
+          message: `${t('Vendor has been')} ${t('edited')} ${t('successfully')}`,
+          duration: 3000,
+        });
+      } else {
+        await adminVendorService.createVendor({
+          name: `${data.firstName} ${data.lastName}`.trim(),
+          email: data.email,
+          phoneNumber: `${data.phoneNumber || ''}`,
+          password: data.password,
+          image: data.image || '',
+        });
+        showToast({
+          type: 'success',
+          title: t('New Vendor'),
+          message: `${t('Vendor has been')} ${t('added')} ${t('successfully')}`,
+          duration: 3000,
+        });
+      }
+
+      onSetVendorFormVisible(false);
+      if (vendorResponse?.refetch) {
+        vendorResponse.refetch();
+      }
+    } catch (err: any) {
+      console.error('Error saving vendor:', err);
       showToast({
         type: 'error',
         title: `${isEditingVendor ? t('Edit') : t('Create')} ${t('Vendor')}`,
-        message: `${t('Vendor')} ${isEditingVendor ? t('Edit') : t('Create')} ${t('Failed')}`,
-        duration: 2500,
+        message: err?.message || `${t('Vendor')} ${isEditingVendor ? t('Edit') : t('Create')} ${t('Failed')}`,
+        duration: 3500,
       });
     }
   };
-
-  function onError({ graphQLErrors, networkError }: ApolloError) {
-    showToast({
-      type: 'error',
-      title: `${isEditingVendor ? t('Edit') : t('Create')} ${t('Vendor')}`,
-      message:
-        graphQLErrors[0]?.message ??
-        networkError?.message ??
-        `${t('Vendor')} ${isEditingVendor ? t('Edit') : t('Create')} ${t('Failed')}`,
-      duration: 2500,
-    });
-  }
 
   const onFetchVendorById = () => {
     setFormValues(initialValues);
@@ -151,13 +138,14 @@ export default function VendorAddForm({
 
   const onHandleSetFormValue = () => {
     if (!data) return;
-      setFormValues((prevState) => ({
-        ...initialValues,
-        ...prevState,
-        ...data?.getVendor,
-        image: data?.getVendor?.image ?? '',
-      }));
+    setFormValues((prevState) => ({
+      ...initialValues,
+      ...prevState,
+      ...data?.getVendor,
+      image: data?.getVendor?.image ?? '',
+    }));
   };
+
   // Use Effects
   useEffect(() => {
     onFetchVendorById();
@@ -178,7 +166,7 @@ export default function VendorAddForm({
         <div className="h-full w-full">
           <div className="flex flex-col gap-2">
             <div className="mb-2 flex flex-col">
-              <span className="text-lg">
+              <span className="text-lg font-semibold">
                 {isEditingVendor ? t('Edit') : t('Add')} {t('Vendor')}
               </span>
             </div>
@@ -190,7 +178,8 @@ export default function VendorAddForm({
                   isEditingVendor && vendorId ? VendorEditSchema : VendorSchema
                 }
                 enableReinitialize={true}
-                validateOnChange={false}
+                validateOnChange={true}
+                validateOnBlur={true}
                 onSubmit={async (values) => {
                   await onVendorCreate(values);
                 }}
@@ -198,6 +187,7 @@ export default function VendorAddForm({
                 {({
                   values,
                   errors,
+                  touched,
                   handleChange,
                   handleSubmit,
                   isSubmitting,
@@ -206,161 +196,146 @@ export default function VendorAddForm({
                   return (
                     <Form onSubmit={handleSubmit}>
                       <div className="space-y-3">
-                        <CustomTextField
-                          type="text"
-                          name="firstName"
-                          placeholder={t('First Name')}
-                          maxLength={35}
-                          value={values.firstName}
-                          onChange={handleChange}
-                          isLoading={loading}
-                          showLabel={true}
-                          style={{
-                            borderColor: onErrorMessageMatcher(
-                              'firstName',
-                              errors?.firstName,
-                              VendorErrors
-                            )
-                              ? 'red'
-                              : '',
-                          }}
-                        />
-                        <CustomTextField
-                          type="text"
-                          name="lastName"
-                          placeholder={t('Last Name')}
-                          maxLength={35}
-                          value={values.lastName}
-                          onChange={handleChange}
-                          isLoading={loading}
-                          showLabel={true}
-                          style={{
-                            borderColor: onErrorMessageMatcher(
-                              'lastName',
-                              errors?.lastName,
-                              VendorErrors
-                            )
-                              ? 'red'
-                              : '',
-                          }}
-                        />
-                        <CustomIconTextField
-                          type="email"
-                          name="email"
-                          placeholder={t('Email')}
-                          maxLength={35}
-                          showLabel={true}
-                          iconProperties={{
-                            icon: faEnvelope,
-                            position: 'right',
-                            style: { marginTop: '1px' },
-                          }}
-                          value={values.email}
-                          isLoading={loading}
-                          onChange={handleChange}
-                          style={{
-                            borderColor: onErrorMessageMatcher(
-                              'email',
-                              errors?.email,
-                              VendorErrors
-                            )
-                              ? 'red'
-                              : '',
-                          }}
-                        />
+                        <div>
+                          <CustomTextField
+                            type="text"
+                            name="firstName"
+                            placeholder={t('First Name')}
+                            maxLength={35}
+                            value={values.firstName}
+                            onChange={handleChange}
+                            isLoading={loading}
+                            showLabel={true}
+                            error={touched.firstName && errors.firstName ? errors.firstName : ''}
+                          />
+                        </div>
 
-                        <CustomPhoneTextField
-                          mask="999-999-9999"
-                          name="phoneNumber"
-                          showLabel={true}
-                          isLoading={loading}
-                          placeholder={t('Phone Number')}
-                          value={values.phoneNumber}
-                          onChange={(e) => {
-                            setFieldValue('phoneNumber', e);
-                            // setCountryCode(code);
-                          }}
-                          type="text"
-                          style={{
-                            borderColor: onErrorMessageMatcher(
-                              'phoneNumber',
-                              errors?.phoneNumber,
-                              VendorErrors
-                            )
-                              ? 'red'
-                              : '',
-                          }}
-                        />
+                        <div>
+                          <CustomTextField
+                            type="text"
+                            name="lastName"
+                            placeholder={t('Last Name')}
+                            maxLength={35}
+                            value={values.lastName}
+                            onChange={handleChange}
+                            isLoading={loading}
+                            showLabel={true}
+                            error={touched.lastName && errors.lastName ? errors.lastName : ''}
+                          />
+                        </div>
 
-                        <CustomPasswordTextField
-                          autoComplete="new-password"
-                          placeholder={t('Password')}
-                          name="password"
-                          maxLength={20}
-                          value={values.password}
-                          showLabel={true}
-                          isLoading={loading}
-                          onChange={handleChange}
-                          style={{
-                            borderColor: onErrorMessageMatcher(
-                              'password',
-                              errors?.password,
-                              VendorErrors
-                            )
-                              ? 'red'
-                              : '',
-                          }}
-                        />
+                        <div>
+                          <CustomIconTextField
+                            type="email"
+                            name="email"
+                            placeholder={t('Email')}
+                            maxLength={50}
+                            showLabel={true}
+                            iconProperties={{
+                              icon: faEnvelope,
+                              position: 'right',
+                              style: { marginTop: '1px' },
+                            }}
+                            value={values.email}
+                            isLoading={loading}
+                            onChange={handleChange}
+                          />
+                          {touched.email && errors?.email && (
+                            <p className="mt-1 text-xs text-red-500">{errors.email}</p>
+                          )}
+                        </div>
 
-                        <CustomPasswordTextField
-                          autoComplete="new-password"
-                          placeholder={t('Confirm Password')}
-                          name="confirmPassword"
-                          maxLength={20}
-                          showLabel={true}
-                          isLoading={loading}
-                          value={values.confirmPassword ?? ''}
-                          onChange={handleChange}
-                          feedback={false}
-                          style={{
-                            borderColor: onErrorMessageMatcher(
-                              'confirmPassword',
-                              errors?.confirmPassword,
-                              VendorErrors
-                            )
-                              ? 'red'
-                              : '',
-                          }}
-                        />
-                        <CustomUploadImageComponent
-                          key="image"
-                          name="image"
-                          title={t('Upload Image')}
-                          fileTypes={['image/jpg', 'image/webp', 'image/jpeg']}
-                          maxFileHeight={1080}
-                          maxFileWidth={1080}
-                          maxFileSize={MAX_SQUARE_FILE_SIZE}
-                          orientation="SQUARE"
-                          onSetImageUrl={setFieldValue}
-                          existingImageUrl={values.image}
-                          showExistingImage={isEditingVendor ? true : false}
-                          style={{
-                            borderColor: onErrorMessageMatcher(
-                              'image',
-                              errors?.image as string,
-                              VendorErrors
-                            )
-                              ? 'red'
-                              : '',
-                          }}
-                        />
+                        <div>
+                          <CustomPhoneTextField
+                            mask="999-999-9999"
+                            name="phoneNumber"
+                            showLabel={true}
+                            isLoading={loading}
+                            placeholder={t('Phone Number')}
+                            value={values.phoneNumber}
+                            onChange={(e) => {
+                              setFieldValue('phoneNumber', e);
+                            }}
+                            type="text"
+                          />
+                          {touched.phoneNumber && errors?.phoneNumber && (
+                            <p className="mt-1 text-xs text-red-500">{errors.phoneNumber}</p>
+                          )}
+                        </div>
+
+                        {!isEditingVendor && (
+                          <>
+                            <div>
+                              <CustomPasswordTextField
+                                autoComplete="new-password"
+                                placeholder={t('Password')}
+                                name="password"
+                                maxLength={30}
+                                value={values.password}
+                                showLabel={true}
+                                isLoading={loading}
+                                onChange={handleChange}
+                              />
+                              {touched.password && errors?.password && (
+                                <p className="mt-1 text-xs text-red-500">{errors.password}</p>
+                              )}
+                            </div>
+
+                            <div>
+                              <CustomPasswordTextField
+                                autoComplete="new-password"
+                                placeholder={t('Confirm Password')}
+                                name="confirmPassword"
+                                maxLength={30}
+                                showLabel={true}
+                                isLoading={loading}
+                                value={values.confirmPassword ?? ''}
+                                onChange={handleChange}
+                                feedback={false}
+                              />
+                              {touched.confirmPassword && errors?.confirmPassword && (
+                                <p className="mt-1 text-xs text-red-500">{errors.confirmPassword}</p>
+                              )}
+                            </div>
+                          </>
+                        )}
+
+                        <div>
+                          <CustomUploadImageComponent
+                            key="image"
+                            name="image"
+                            title={t('Upload Image')}
+                            fileTypes={['image/jpg', 'image/webp', 'image/jpeg', 'image/png']}
+                            maxFileHeight={1080}
+                            maxFileWidth={1080}
+                            maxFileSize={MAX_SQUARE_FILE_SIZE}
+                            orientation="SQUARE"
+                            onSetImageUrl={setFieldValue}
+                            existingImageUrl={values.image}
+                            showExistingImage={isEditingVendor ? true : false}
+                          />
+                          {touched.image && errors?.image && (
+                            <p className="mt-1 text-xs text-red-500">{errors.image}</p>
+                          )}
+                        </div>
 
                         <div className="py-4 flex justify-end">
                           <CustomButton
-                            className="h-10 w-fit border-gray-300 border dark:border-dark-600 bg-black  px-8 text-white dark:text-white"
+                            className="h-10 w-fit border-gray-300 border dark:border-dark-600 bg-black px-8 text-white dark:text-white"
                             label={isEditingVendor ? t('Update') : t('Add')}
                             type="submit"
                             loading={isSubmitting}
+                            onClick={() => {
+                              if (errors && Object.keys(errors).length > 0) {
+                                const firstErrorMsg = Object.values(errors)[0] as string;
+                                showToast({
+                                  type: 'error',
+                                  title: t('Validation Error'),
+                                  message: firstErrorMsg || t('Please fill in all required fields'),
+                                  duration: 3500,
+                                });
+                              }
+                            }}
                           />
                         </div>
                       </div>
