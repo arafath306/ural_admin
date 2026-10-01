@@ -96,7 +96,7 @@ function CustomUploadImageComponent({
     return extracted_files.length ? extracted_files[0] : files[0];
   };
 
-  // Upload to S3
+  // Upload to Supabase Storage via Next.js API route
   const uploadImageToS3 = useCallback(
     async (file: File): Promise<void> => {
       setIsUploading(true);
@@ -113,21 +113,26 @@ function CustomUploadImageComponent({
           processedFile = file;
         }
         
-        // Convert to base64
-        const base64 = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(processedFile);
+        const formData = new FormData();
+        formData.append('file', processedFile);
+        formData.append('folder', name || 'uploads');
+
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
         });
-        
-        const { data } = await uploadToS3({
-          variables: { image: base64 }
-        });
-        
-        const imageUrl = data?.uploadImageToS3?.imageUrl;
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || ('Upload failed with status ' + res.status));
+        }
+
+        const resData = await res.json();
+        const imageUrl = resData.url || resData.imageUrl || resData.data?.uploadImageToS3?.imageUrl;
         
         if (imageUrl) {
           onSetImageUrl(name, imageUrl);
+          setImageValidationErr({ bool: false, msg: '' });
           showToast({
             type: 'info',
             title: title,
@@ -135,7 +140,7 @@ function CustomUploadImageComponent({
             duration: 2500,
           });
         } else {
-          throw new Error('No image URL returned');
+          throw new Error('No image URL returned from upload server');
         }
       } catch (error: any) {
         onSetImageUrl(name, '');
@@ -147,14 +152,14 @@ function CustomUploadImageComponent({
         });
         setImageValidationErr({
           bool: true,
-          msg: 'Upload failed',
+          msg: error?.message || 'Upload failed',
         });
         setImageFile('');
       } finally {
         setIsUploading(false);
       }
     },
-    [name, onSetImageUrl, showToast, title, fileTypes, uploadToS3, t]
+    [name, onSetImageUrl, showToast, title, fileTypes, t]
   );
 
   // Select Image
