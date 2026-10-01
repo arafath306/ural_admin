@@ -32,13 +32,53 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, email, phoneNumber, phone } = body;
+    const { name, email, phoneNumber, phone, password } = body;
 
+    if (!email) {
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    }
+
+    // 1. Create or link user in Supabase Auth
+    let authUserId: string | null = null;
+
+    if (password) {
+      try {
+        const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
+          email: email.trim().toLowerCase(),
+          password: password,
+          email_confirm: true,
+          user_metadata: {
+            name: name || 'Vendor',
+            role: 'vendor',
+            userType: 'VENDOR',
+          },
+        });
+
+        if (authData?.user) {
+          authUserId = authData.user.id;
+        } else if (authErr) {
+          console.warn('Auth user creation warning (might already exist):', authErr.message);
+          // Find existing user if email already registered
+          const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
+          const existing = listData?.users?.find(
+            (u) => u.email?.toLowerCase() === email.trim().toLowerCase()
+          );
+          if (existing) {
+            authUserId = existing.id;
+          }
+        }
+      } catch (authException) {
+        console.warn('Error creating Auth user:', authException);
+      }
+    }
+
+    // 2. Insert into vendors table
     const payload: any = {
       name: name || 'Vendor',
-      email: email,
+      email: email.trim().toLowerCase(),
       phone: phoneNumber || phone || '',
       is_active: true,
+      user_id: authUserId,
     };
 
     const { data, error } = await supabaseAdmin
@@ -51,7 +91,8 @@ export async function POST(req: NextRequest) {
       console.error('API POST vendor error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    return NextResponse.json({ success: true, data });
+
+    return NextResponse.json({ success: true, data, authUserId });
   } catch (err: any) {
     console.error('API POST vendor exception:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -61,11 +102,30 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, name, email, phoneNumber, phone } = body;
+    const { id, name, email, phoneNumber, phone, password } = body;
+
+    // If password provided, update user in Supabase Auth if we have user_id
+    if (password && id) {
+      try {
+        const { data: existingVendor } = await supabaseAdmin
+          .from('vendors')
+          .select('user_id, email')
+          .eq('id', id)
+          .single();
+
+        if (existingVendor?.user_id) {
+          await supabaseAdmin.auth.admin.updateUserById(existingVendor.user_id, {
+            password,
+          });
+        }
+      } catch (authErr) {
+        console.warn('Could not update Auth password:', authErr);
+      }
+    }
 
     const updates: any = {};
     if (name) updates.name = name;
-    if (email) updates.email = email;
+    if (email) updates.email = email.trim().toLowerCase();
     if (phoneNumber || phone) updates.phone = phoneNumber || phone;
 
     const { data, error } = await supabaseAdmin
