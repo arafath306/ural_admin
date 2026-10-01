@@ -1,5 +1,3 @@
-import { supabase } from '../client';
-
 export interface ICreateVendorInput {
   name: string;
   email: string;
@@ -11,17 +9,10 @@ export interface ICreateVendorInput {
 export const adminVendorService = {
   async fetchVendors() {
     try {
-      const { data, error } = await supabase
-        .from('vendors')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching vendors:', error);
-        return [];
-      }
-
-      return (data || []).map((v: any) => ({
+      const res = await fetch('/api/vendors');
+      if (!res.ok) throw new Error('Failed to fetch vendors');
+      const json = await res.json();
+      return (json.data || []).map((v: any) => ({
         _id: v.id,
         id: v.id,
         name: v.name || 'Vendor',
@@ -32,51 +23,36 @@ export const adminVendorService = {
         isActive: v.is_active ?? true,
       }));
     } catch (err) {
-      console.error('Failed to fetch vendors:', err);
+      console.error('Failed to fetch vendors via api:', err);
       return [];
     }
   },
 
   async createVendor(input: ICreateVendorInput) {
-    const payload: any = {
-      name: input.name,
-      email: input.email,
-      phone: input.phoneNumber || '',
-      is_active: true,
-    };
+    const res = await fetch('/api/vendors', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    });
 
-    const { data, error } = await supabase
-      .from('vendors')
-      .insert(payload)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Supabase create vendor error:', error);
-      throw new Error(error.message || 'Failed to create vendor in database');
+    const json = await res.json();
+    if (!res.ok || json.error) {
+      throw new Error(json.error || 'Failed to create vendor');
     }
-
-    return data;
+    return json.data;
   },
 
   async updateVendor(id: string, input: Partial<ICreateVendorInput>) {
-    const updates: any = {};
-    if (input.name) updates.name = input.name;
-    if (input.email) updates.email = input.email;
-    if (input.phoneNumber) updates.phone = input.phoneNumber;
+    const res = await fetch('/api/vendors', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, ...input }),
+    });
 
-    const { data, error } = await supabase
-      .from('vendors')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Supabase update vendor error:', error);
-      throw new Error(error.message || 'Failed to update vendor in database');
+    const json = await res.json();
+    if (!res.ok || json.error) {
+      throw new Error(json.error || 'Failed to update vendor');
     }
-
-    return data;
+    return json.data;
   },
 };
